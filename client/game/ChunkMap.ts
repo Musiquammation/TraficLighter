@@ -142,7 +142,7 @@ export class ChunkMap {
 
 	getDanger(car: Car, range: number) {
 		let finalSpeed = Infinity;
-		const CAR_PASSAGE_LENGTH = 1 + CAR_SIZE;
+		const CAR_PASSAGE_LENGTH = 1 + CAR_SIZE/2;
 		const invSpeed = 1 / car.speed;
 
 		function limSpeed(lim: number) {
@@ -151,12 +151,12 @@ export class ChunkMap {
 
 		}
 
-		function limDist(dist: number, speed = 0) {
+		function limDist(dist: number) {
 			let d = car.deceleration * dist;
 			if (d >= 0)
 				d = Math.sqrt(d);
 
-			limSpeed(d + speed);
+			limSpeed(d);
 		}
 
 
@@ -240,7 +240,7 @@ export class ChunkMap {
 
 			if (over !== 'empty') {
 				const carsDist = Math.max(Math.abs(over.x - car.x) + Math.abs(over.y - car.y));
-				limDist(carsDist - 1, over.speed);
+				limDist(carsDist - 1);
 
 			}	
 
@@ -252,8 +252,11 @@ export class ChunkMap {
 			const entryDist = Math.max(dist - realMove - CAR_SIZE/2, 0);
 			const exitDist = entryDist + CAR_PASSAGE_LENGTH;
 
-
-			if (checkRight) {
+			const runCheck = (
+				turnDir: {x: number, y: number},
+				opDir: Direction,
+				dir: Direction
+			) => {
 				const check = {
 					x: pos.x,
 					y: pos.y,
@@ -262,19 +265,37 @@ export class ChunkMap {
 					chunk: pos.chunk
 				};
 
-				// this.movePosition(check, d);
 				for (let checkDist = 1; checkDist < range; checkDist++) {
-					this.movePosition(check, rd);
+					this.movePosition(check, turnDir);
 
 					const road = check.chunk.getRoad(Math.floor(check.x), Math.floor(check.y));
-					if ((road & 0x7) === 0)
+
+					let shouldBreak = false;
+					switch ((road & 0x7) as roadtypes.types) {
+					case roadtypes.types.VOID:
+						shouldBreak = true;
+						break;
+
+					case roadtypes.types.ROAD:
+					case roadtypes.types.TURN:
+					case roadtypes.types.SPAWNER:
+					case roadtypes.types.CONSUMER:
+						break;
+
+					case roadtypes.types.PRIORITY:
+						if ((road >> 6) == dir)
+							shouldBreak = true;
+						break;
+					}
+
+					if (shouldBreak)
 						break;
 
 					const over = check.chunk.getCar(Math.floor(check.x), Math.floor(check.y));
 					if (over === 'full' || over === 'empty')
 						continue;
 
-					if (over.direction !== rop)
+					if (over.direction !== opDir)
 						continue;
 
 					const over_realMove = getCellDist(over.direction, over.x, over.y);
@@ -292,6 +313,14 @@ export class ChunkMap {
 
 					break;
 				}
+			}
+
+			if (checkRight) {
+				runCheck(rd, rop, rdir);
+			}
+
+			if (checkRight) {
+				runCheck(ld, lop, ldir)
 			}
 		}
 

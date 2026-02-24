@@ -26,7 +26,7 @@ export class Game extends GameState {
 	private test() {
 		const y = 33;
 		
-		for (let i = 0; i < 10; i++) {
+		for (let i = 0; i < 50; i++) {
 			this.chunkMap.setRoad(i, y+3, roadtypes.types.ROAD);
 
 			for (let j = 0; j < 7; j++) {
@@ -36,24 +36,25 @@ export class Game extends GameState {
 
 		this.chunkMap.setRoad(50, y+3, roadtypes.types.CONSUMER);
 		this.chunkMap.setRoad(14, y, roadtypes.types.CONSUMER);
+		// this.chunkMap.setRoad(14, y+4, roadtypes.types.PRIORITY | (3<<6));
 
 		const chunk = this.chunkMap.getChunk(0, 0);
 		chunk.appendCarSpawner({
 			x: 1,
 			y: y+3,
 			color: CarColor.RED,
-			rythm: 	51,
-			couldown: 0,
+			rythm: 	41,
+			couldown: 1000000,
 			direction: Direction.RIGHT,
 			count: Infinity
 		});
 
 		chunk.appendCarSpawner({
 			x: 14,
-			y: y+16,
+			y: y+8,
 			color: CarColor.RED,
-			rythm: 31,
-			couldown: 1000000000000000,
+			rythm: 41,
+			couldown: 0,
 			direction: Direction.UP,
 			count: Infinity
 		});

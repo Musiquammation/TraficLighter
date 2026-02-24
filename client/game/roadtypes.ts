@@ -76,9 +76,8 @@ export namespace roadtypes {
 		function drawImage(name: string, angle: number, flip = {x: false, y: false}) {
 			ctx.save();
 			ctx.translate(0.5, 0.5);
+			ctx.rotate(-angle);
 			ctx.scale(flip.x ? -1 : 1, flip.y ? -1 : 1);
-			ctx.rotate(angle);
-
 			ctx.imageSmoothingEnabled = false;
 			ctx.drawImage(iloader.get(name), -0.5, -0.5, 1, 1);
 			ctx.restore();
@@ -142,7 +141,7 @@ export namespace roadtypes {
 		case types.PRIORITY:
 		{
 			const direction = Math.PI/2 * ((road >> 6) & 0x3);
-			drawImage('yeild', direction);
+			drawImage('yield', direction);
 			break;
 		}
 

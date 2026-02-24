@@ -36,70 +36,67 @@ export function opposeDirection(dir: Direction): Direction {
 
 
 export function getAttach(direction: Direction, rotatingToRight: boolean, step: number) {
-	// Limite step pour sécurité
-	step = Math.max(0, Math.min(1, step));
+    step = Math.max(0, Math.min(1, step));
 
-	let cx = 0, cy = 0; // centre du cercle
-	let startAngle = 0;  // angle de départ en radians
-	let endAngle = 0;    // angle d'arrivée en radians
-	let radius = 0.5;    // rayon du quart de cercle
+    let cx = 0, cy = 0;
+    let startAngle = 0;
+    let endAngle = 0;
+    const radius = 0.5;
 
 	switch (direction) {
-		case Direction.RIGHT:
-			cx = 0;
-			cy = 1;
-			if (rotatingToRight) {
-				startAngle = -Math.PI / 2; // départ (0,1/2)
-				endAngle = 0;              // fin (1/2,1)
-			} else {
-				startAngle = -Math.PI / 2;
-				endAngle = -Math.PI;       // vers le haut-gauche
-			}
-			break;
 		case Direction.UP:
-			cx = 0;
-			cy = 0;
 			if (rotatingToRight) {
-				startAngle = 0;             // départ (1/2,0)
-				endAngle = Math.PI / 2;     // fin (0,1/2)
+				cx = 1; cy = 1;
+				startAngle = Math.PI;        // (0.5, 1)
+				endAngle = 3*Math.PI/2;     // (1, 0.5)  -- décroissant, correct
 			} else {
+				cx = 0; cy = 1;
 				startAngle = 0;
-				endAngle = -Math.PI / 2;    // vers droite-bas
+				endAngle = -Math.PI / 2;
 			}
 			break;
-		case Direction.LEFT:
-			cx = 1;
-			cy = 0;
+		case Direction.RIGHT:
 			if (rotatingToRight) {
-				startAngle = Math.PI / 2;   // départ (1,1/2)
-				endAngle = Math.PI;         // fin (1/2,0)
+				cx = 0; cy = 1;
+				startAngle = -Math.PI / 2;   // (0, 0.5)
+				endAngle = 0;                // (0.5, 1)
 			} else {
-				startAngle = Math.PI / 2;
-				endAngle = 0;               // vers bas-droite
+				cx = 0; cy = 0;
+				startAngle = Math.PI / 2;    // (0, 0.5)
+				endAngle = 0;                // (0.5, 0)
 			}
 			break;
 		case Direction.DOWN:
-			cx = 1;
-			cy = 1;
 			if (rotatingToRight) {
-				startAngle = Math.PI;       // départ (1/2,1)
-				endAngle = 3 * Math.PI / 2; // fin (1,1/2)
+				cx = 0; cy = 0;
+				startAngle = 0;              // (0.5, 0)
+				endAngle = Math.PI / 2;      // (0, 0.5)
 			} else {
-				startAngle = Math.PI;
-				endAngle = Math.PI / 2;     // vers gauche-haut
+				cx = 1; cy = 0;
+				startAngle = Math.PI;        // (0.5, 0)
+				endAngle = Math.PI / 2;      // (1, 0.5)
+			}
+			break;
+		case Direction.LEFT:
+			if (rotatingToRight) {
+				cx = 1; cy = 0;
+				startAngle = Math.PI / 2;    // (1, 0.5)
+				endAngle = Math.PI;          // (0.5, 0)
+			} else {
+				cx = 1; cy = 1;
+				startAngle = 3*Math.PI / 2;
+				endAngle = Math.PI;
 			}
 			break;
 	}
+	
+    const angle = startAngle + (endAngle - startAngle) * step;
+	console.log(cy, angle);
+    const x = cx + radius * Math.cos(angle);
+    const y = cy + radius * Math.sin(angle);
 
-	// interpolation linéaire de l'angle
-	const angle = startAngle + (endAngle - startAngle) * step;
-
-	const x = cx + radius * Math.cos(angle);
-	const y = cy + radius * Math.sin(angle);
-
-	return {x, y};
+    return { x, y };
 }
-
 
 export function getDirectionDelta(direction: Direction) {
 	let x = 0;
