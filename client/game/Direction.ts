@@ -1,3 +1,5 @@
+import { modulo } from "./modulo";
+
 export enum Direction {
 	RIGHT,
 	UP,
@@ -123,3 +125,26 @@ export function getDirectionDelta(direction: Direction) {
 	return {x, y};
 }
 
+
+export function getCellDist(direction: Direction, x: number, y: number) {
+	let realMove;
+	switch (direction) {
+	case Direction.RIGHT:
+		realMove = modulo(x, 1);
+		break;
+
+	case Direction.UP:
+		realMove = 1 - modulo(y, 1);
+		break;
+
+	case Direction.LEFT:
+		realMove = 1 - modulo(x, 1);
+		break;
+		
+	case Direction.DOWN:
+		realMove = modulo(y, 1);
+		break;
+	}
+
+	return realMove;
+}

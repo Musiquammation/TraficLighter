@@ -28,6 +28,10 @@ export class HoleArray<T> {
 		return idx;
 	}
 
+	remove(idx: number) {
+		this.items[idx] = null;
+	}
+
 	*[Symbol.iterator](): IterableIterator<[number, T]> {
 		for (let i = 0; i < this.items.length; i++) {
 			const item = this.items[i];

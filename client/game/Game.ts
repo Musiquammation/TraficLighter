@@ -12,6 +12,7 @@ import { InputHandler } from "../handler/InputHandler";
 import { ImageLoader } from "../handler/ImageLoader";
 import { CarColor } from "./CarColor";
 import { PathGraph } from "./PathGraph";
+import { modulo } from "./modulo";
 
 
 
@@ -25,12 +26,11 @@ export class Game extends GameState {
 	private test() {
 		const y = 33;
 		
-		for (let i = 0; i < 50; i++) {
+		for (let i = 0; i < 10; i++) {
 			this.chunkMap.setRoad(i, y+3, roadtypes.types.ROAD);
 
 			for (let j = 0; j < 7; j++) {
 				this.chunkMap.setRoad(5 + 3*j, y+i, roadtypes.types.ROAD);
-				this.chunkMap.setRoad(5 + 3*j, y-i, roadtypes.types.ROAD);
 			}
 		}
 
@@ -42,18 +42,20 @@ export class Game extends GameState {
 			x: 1,
 			y: y+3,
 			color: CarColor.RED,
-			rythm: 31,
+			rythm: 	51,
 			couldown: 0,
-			direction: Direction.RIGHT
+			direction: Direction.RIGHT,
+			count: Infinity
 		});
 
 		chunk.appendCarSpawner({
 			x: 14,
-			y: y+10,
+			y: y+16,
 			color: CarColor.RED,
-			rythm: 79,
-			couldown: 0,
-			direction: Direction.UP
+			rythm: 31,
+			couldown: 1000000000000000,
+			direction: Direction.UP,
+			count: Infinity
 		});
 
 	}
@@ -188,25 +190,26 @@ export class Game extends GameState {
 		}
 
 		// Behave cars
-		for (let {car, chunk, index} of this.chunkMap.iterateCars()) {
-			const x = Math.floor(car.x) % Chunk.SIZE;
-			const y = Math.floor(car.y) % Chunk.SIZE;
+		for (let {car, chunk} of this.chunkMap.iterateCars()) {
+			const x = modulo(Math.floor(car.x), Chunk.SIZE);
+			const y = modulo(Math.floor(car.y), Chunk.SIZE);
 			const road = chunk.getRoad(x, y);
 			if (car.behave(road, this)) {
-				chunk.cars.splice(index, 1);
-				index--;
+				car.alive = false;
 			}
 		}
 
 
 		// Move cars
 		for (let {car, chunk} of this.chunkMap.iterateCars()) {
-			const x = Math.floor(car.x) % Chunk.SIZE;
-			const y = Math.floor(car.y) % Chunk.SIZE;
+			const x = modulo(Math.floor(car.x), Chunk.SIZE);
+			const y = modulo(Math.floor(car.y), Chunk.SIZE);
 			const road = chunk.getRoad(x, y);
 			car.move(road);
 		}
 
+
+		this.chunkMap.updateCarGrid(this.frameCount);
 
 		this.frameCount++;
 

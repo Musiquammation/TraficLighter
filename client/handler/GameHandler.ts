@@ -26,9 +26,11 @@ export class GameHandler {
 			turn_front: "assets/turn/front.png",
 			turn_select: "assets/turn/select.png",
 			turn_full: "assets/turn/full.png",
-			yeild: "assets/yeild.png",
+			yield: "assets/yield.png",
 		});
+
 	}
+	
 
 	gameLogic() {
 		const next = this.state.frame(this);

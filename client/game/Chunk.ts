@@ -1,4 +1,5 @@
 import { ImageLoader } from "../handler/ImageLoader";
+import { modulo } from "./modulo";
 import { Car } from "./Car";
 import { CarColor } from "./CarColor";
 import { ChunkMap } from "./ChunkMap";
@@ -13,6 +14,7 @@ interface CarSpawner {
 	rythm: number;
 	couldown: number;
 	direction: Direction;
+	count: number;
 }
 
 
@@ -27,10 +29,12 @@ export class Chunk {
 
 	x: number;
 	y: number;
-
-	cars: Car[] = [];
-	grid = new Uint8Array(Chunk.SIZE * Chunk.SIZE);
-	carSpawners = new HoleArray<CarSpawner>();
+	
+	private nextCarSlot = 0;
+	private cars: Car[][] = Array(254).fill(null).map(() => []);
+	private grid = new Uint8Array(Chunk.SIZE * Chunk.SIZE);
+	private carGrid = new Uint8Array(Chunk.SIZE * Chunk.SIZE).fill(255);
+	private carSpawners = new HoleArray<CarSpawner>();
 
 	constructor(x: number, y: number) {
 		this.x = x;
@@ -76,9 +80,9 @@ export class Chunk {
 	}
 
 	drawCars(ctx: CanvasRenderingContext2D) {
-		for (let car of this.cars) {
-			const x = Math.floor(car.x) % Chunk.SIZE;
-			const y = Math.floor(car.y) % Chunk.SIZE;
+		for (const car of this.iterateCars()) {
+			const x = modulo(Math.floor(car.x), Chunk.SIZE);
+			const y = modulo(Math.floor(car.y), Chunk.SIZE);
 
 			const road = this.getRoad(x, y);
 			car.draw(ctx, road);
@@ -87,21 +91,30 @@ export class Chunk {
 
 
 	runEvents() {
-		for (const [_, spawner] of this.carSpawners) {
+		for (const [idx, spawner] of this.carSpawners) {
 			spawner.couldown--;
 			if (spawner.couldown <= 0) {
-				spawner.couldown += spawner.rythm;
-
 				const car = new Car(
 					this.x * Chunk.SIZE + spawner.x + .5,
 					this.y * Chunk.SIZE + spawner.y + .5,
 					spawner.direction,
 					spawner.color
 				);
-				this.cars.push(car);
+
+				if (this.appendCar(car, spawner.x, spawner.y)) {
+					spawner.count--;
+					if (spawner.count <= 0) {
+						this.carSpawners.remove(idx);
+					}
+
+				}
+				
+				spawner.couldown += spawner.rythm;
 			}
 		}
 	}
+
+
 
 	appendCarSpawner(spawner: CarSpawner) {
 		const idx = this.carSpawners.append(spawner);
@@ -109,4 +122,86 @@ export class Chunk {
 		this.setRoad(spawner.x, spawner.y, road);
 	}
 
+	*iterateCars() {
+		for (const car of this.cars) {
+			yield* car;
+		}
+	}
+
+
+	appendCar(car: Car, x: number, y: number) {
+		const idx = y * Chunk.SIZE + x;
+		if (this.carGrid[idx] !== 255) {
+			console.warn("Failed to push car");
+			return false;
+		}
+		
+		this.carGrid[idx] = this.nextCarSlot;
+		this.cars[this.nextCarSlot].push(car);
+		this.nextCarSlot++;
+
+		if (this.nextCarSlot >= 254)
+			this.nextCarSlot = 0;
+
+		return true;
+	}
+
+	updateCarGrid(carsToMove: Car[], frameCount: number) {
+		this.carGrid.fill(255);
+
+		for (let id = 0; id < 254; id++) {
+			const cars = this.cars[id];
+
+			for (let i = cars.length - 1; i >= 0; i--) {
+				const car = cars[i];
+
+				if (car.frameLastPositionUpdate === frameCount)
+					continue;
+
+				if (!car.alive) {
+					cars.splice(i, 1);
+				}
+
+				const cx = Math.floor(car.x / Chunk.SIZE);
+				const cy = Math.floor(car.y / Chunk.SIZE);
+
+				if (cx !== this.x || cy !== this.y) {
+					cars.splice(i, 1);
+					carsToMove.push(car);
+					continue;
+				}
+
+				const x = modulo(Math.floor(car.x), Chunk.SIZE);
+				const y = modulo(Math.floor(car.y), Chunk.SIZE);
+				const idx = y * Chunk.SIZE + x;
+
+				if (this.carGrid[idx] !== 255) {
+					this.carGrid[idx] = 254;
+				} else {
+					this.carGrid[idx] = id;
+				}
+				
+				car.frameLastPositionUpdate = frameCount; // frame already handled
+			}
+		}
+	}
+
+	getCar(x: number, y: number): Car | 'empty' | 'full' {
+		const idx = this.carGrid[y * Chunk.SIZE + x];
+		if (idx === 255)
+			return 'empty';
+
+		if (idx === 254)
+			return 'full';
+
+		for (const car of this.cars[idx]) {
+			const carX = modulo(Math.floor(car.x), Chunk.SIZE);
+			const carY = modulo(Math.floor(car.y), Chunk.SIZE);
+
+			if (carX === x && carY === y)
+				return car;
+		}
+
+		return 'empty';
+	}
 }

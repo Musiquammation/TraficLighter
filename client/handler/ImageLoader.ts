@@ -54,6 +54,7 @@ export class ImageLoader {
 					this.loadedCount++;
 
 				} catch (err) {
+					console.warn("Error with:", path);
 					console.error(err);
 					this.loadedCount++;
 				}

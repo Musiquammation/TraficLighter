@@ -4,9 +4,17 @@ import { ChunkMap } from "./ChunkMap";
 import { Direction, getAttach, rotateDirectionToLeft, rotateDirectionToRight } from "./Direction";
 import { Game } from "./Game";
 import { roadtypes } from "./roadtypes";
+import { CAR_SIZE } from "./CAR_SIZE";
+import { modulo } from "./modulo";
 
 
 const RENDER_DISTANCE = 16;
+
+let nextCarId = 0;
+
+const colors = [
+	"red", "yellow", "green", "blue"
+];
 
 export class Car {
 	direction: Direction;
@@ -14,9 +22,13 @@ export class Car {
 	deceleration = .005;
 	speedLimit = .1;
 	speed = this.speedLimit;
+	nextSpeed = this.speedLimit;
 	rotationStep = -1;
 	rotatingToRight = false;
 	color: CarColor;
+	frameLastPositionUpdate = -1;
+	alive = true;
+	id = nextCarId++;
 
 	x: number;
 	y: number;
@@ -37,7 +49,8 @@ export class Car {
 	draw(ctx: CanvasRenderingContext2D, road: roadtypes.road_t) {
 		ctx.save();
 		
-		ctx.fillStyle = "#f04";
+
+		ctx.fillStyle = colors[modulo(this.id, colors.length)];
 		
 
 		let x: number;
@@ -69,16 +82,13 @@ export class Car {
 			y = this.y;
 		}
 
-		const size = .76;
-		ctx.fillRect(x - size/2, y - size/2, size, size);
+		ctx.fillRect(x - CAR_SIZE/2, y - CAR_SIZE/2, CAR_SIZE, CAR_SIZE);
 
 		ctx.restore();
 
 	}
 
 	behave(road: roadtypes.road_t, game: Game) {
-		let externalSpeedLimit = Infinity;
-
 		let speedTarget = this.speedLimit;
 		let kill = false;
 
@@ -119,7 +129,6 @@ export class Car {
 					break;
 
 				case roadtypes.TurnDirection.FRONT_RIGHT:
-					console.log(game.frameCount);
 					if (game.frameCount % 2) {
 						this.rotatingToRight = true;
 						this.rotationStep = 0;
@@ -201,8 +210,14 @@ export class Car {
 		case roadtypes.types.SPAWNER:
 		case roadtypes.types.CONSUMER:
 		{
-			externalSpeedLimit = game.chunkMap.getDanger(this.x, this.y,
-				this.direction, RENDER_DISTANCE, this.deceleration, this);
+			const speed = game.chunkMap.getDanger(this, RENDER_DISTANCE);
+			if (speed.lim < speedTarget)
+				speedTarget = speed.lim;
+
+			if (speed.fast > speedTarget && speed.slow < speedTarget) {
+				speedTarget = speed.slow;
+			}
+
 
 			break;
 		}
@@ -216,28 +231,28 @@ export class Car {
 		}
 		
 
-		if (externalSpeedLimit < speedTarget)
-			speedTarget = externalSpeedLimit;
 
 		// Adapt speed to speedTarget
-		if (this.speed < speedTarget) {
-			this.speed += this.acceleration;
-			if (this.speed > speedTarget) {
-				this.speed = speedTarget;
+		let speed = this.speed;
+		if (speed < speedTarget) {
+			speed += this.acceleration;
+			if (speed > speedTarget) {
+				speed = speedTarget;
 			}
 			
-		} else if (this.speed > speedTarget) {
-			this.speed -= this.deceleration;
-			if (this.speed < speedTarget) {
-				this.speed = speedTarget;
-			}
+		} else if (speed > speedTarget) {
+			speed = speedTarget;
 		}
+
+		this.nextSpeed = speed;
 
 
 		return kill;
 	}
 	
 	move(road: roadtypes.road_t) {
+		this.speed = this.nextSpeed;
+
 		const basicMove = () => {
 			switch (this.direction) {
 			case Direction.RIGHT:
