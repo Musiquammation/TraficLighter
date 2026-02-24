@@ -5,10 +5,7 @@
   "type": "module",
   "scripts": {
     "client": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "server": "tsx --tsconfig tsconfig.server.json game/server.ts",
-    "leaderboard": "nodejs leaderboard/server.js"
+    "build": "vite build"
   },
   "devDependencies": {
     "@types/node": "^24.10.2",
