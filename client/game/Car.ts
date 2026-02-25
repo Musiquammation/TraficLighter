@@ -13,7 +13,22 @@ const RENDER_DISTANCE = 16;
 let nextCarId = 0;
 
 const colors = [
-	"red", "yellow", "green", "blue"
+  "#FF0000", // Rouge pur
+  "#FF3D00", // Rouge-orangé intense
+  "#FF6D00", // Orange vif
+  "#FF9100", // Orange saturé
+  "#FFD600", // Jaune vif
+  "#AEEA00", // Vert citron intense
+  "#00E676", // Vert néon
+  "#00FF00", // Vert pur
+  "#00F0FF", // Cyan électrique
+  "#00B0FF", // Bleu azur saturé
+  "#2979FF", // Bleu vif
+  "#3D5AFE", // Indigo électrique
+  "#651FFF", // Violet saturé
+  "#D500F9", // Magenta électrique
+  "#FF00FF", // Magenta pur
+  "#FF1744"  // Rose rouge intense
 ];
 
 export class Car {
@@ -48,6 +63,7 @@ export class Car {
 
 	draw(ctx: CanvasRenderingContext2D, road: roadtypes.road_t) {
 		ctx.save();
+
 		
 
 		ctx.fillStyle = colors[modulo(this.id, colors.length)];
@@ -215,15 +231,11 @@ export class Car {
 				speedTarget = speed.lim;
 			}
 
-			
-			if (this.id === 1)
-				console.log(speed.acceleration);
 
 			if ((speed.fast > speedTarget || speed.acceleration > this.acceleration)
 				&& speed.slow < speedTarget
 			) {
 				speedTarget = speed.slow;
-				console.log("slow " + speed.slow.toFixed(2));
 			}
 
 

@@ -266,9 +266,8 @@ export class ChunkMap {
 			}
 
 			if (over !== 'empty') {
-				const carsDist = Math.max(Math.abs(over.x - car.x) + Math.abs(over.y - car.y));
+				const carsDist = Math.abs(over.x - car.x) + Math.abs(over.y - car.y);
 				limDist(carsDist - 1);
-
 			}	
 
 
@@ -339,7 +338,7 @@ export class ChunkMap {
 					if (fastSpeed > fastPrioritySpeed) {
 						fastPrioritySpeed = fastSpeed;
 						fastPriorityAcceleration = .5 * (fastSpeed*fastSpeed -
-							car.speed*car.speed) / entryDist;
+							car.speed*car.speed) / exitDist;
 					}
 
 

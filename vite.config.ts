@@ -8,7 +8,7 @@ export default defineConfig({
 		port: 5173
 	},
 	build: {
-		outDir: "../dist",					// important car root = client
+		outDir: "../dist",
 		emptyOutDir: true,
 		minify: false,
 		rollupOptions: {
