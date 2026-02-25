@@ -59,7 +59,7 @@ export class Game extends GameState {
 			count: Infinity
 		});
 
-		chunk.appendLight({flag: 0}, 14, y+4)
+		chunk.appendLight({flag: 0}, 14, y+4);
 	}
 
 

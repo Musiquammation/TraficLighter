@@ -35,7 +35,7 @@ export class Car {
 	direction: Direction;
 	acceleration = .001;
 	deceleration = .003;
-	speedLimit = .1;
+	speedLimit = .2;
 	speed = this.speedLimit;
 	nextSpeed = this.speedLimit;
 	rotationStep = -1;

@@ -167,6 +167,10 @@ export class Chunk {
 		this.setRoad(x, y, road);
 	}
 
+	removeLight(x: number, y: number) {
+		this.lights.delete(Chunk.getIdx(x, y));
+	}
+
 
 	*iterateCars() {
 		for (const car of this.cars) {

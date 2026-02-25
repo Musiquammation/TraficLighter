@@ -141,6 +141,16 @@ export class ChunkMap {
 		if (currentRoadType === roadtypes.types.SPAWNER || currentRoadType === roadtypes.types.CONSUMER)
 			return;
 
+		if (currentRoadType === roadtypes.types.LIGHT) {
+			if ((road & 0x7) !== roadtypes.types.LIGHT) {
+				// Remove light
+				c.removeLight(p.rx, p.ry);
+			}
+		} else if ((road & 0x7) === roadtypes.types.LIGHT) {
+			// Append light
+			c.appendLight({flag: 0}, p.rx, p.ry);
+		}
+
 		c.setRoad(p.rx, p.ry, road);
 	}
 
