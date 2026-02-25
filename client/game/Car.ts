@@ -211,11 +211,19 @@ export class Car {
 		case roadtypes.types.CONSUMER:
 		{
 			const speed = game.chunkMap.getDanger(this, RENDER_DISTANCE);
-			if (speed.lim < speedTarget)
+			if (speed.lim < speedTarget) {
 				speedTarget = speed.lim;
+			}
 
-			if (speed.fast > speedTarget && speed.slow < speedTarget) {
+			
+			if (this.id === 1)
+				console.log(speed.acceleration);
+
+			if ((speed.fast > speedTarget || speed.acceleration > this.acceleration)
+				&& speed.slow < speedTarget
+			) {
 				speedTarget = speed.slow;
+				console.log("slow " + speed.slow.toFixed(2));
 			}
 
 

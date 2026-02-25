@@ -100,7 +100,7 @@ export function startGame() {
 			if (window.useRequestAnimationFrame) {
 				requestAnimationFrame(runGameLoop);
 			} else {
-				setTimeout(runGameLoop, 1000/60);
+				setTimeout(runGameLoop, 1000/3);
 			}
 		}
 

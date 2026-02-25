@@ -12,14 +12,77 @@ function produceChunkKey(x: number, y: number) {
 
 
 
-interface Position {
+class Position {
 	x: number;
 	y: number;
 	cx: number;
 	cy: number;
 	chunk: Chunk;
-}
 
+	constructor(x: number, y: number, cmap: ChunkMap);
+	constructor(other: Position);
+
+	constructor(
+		a: number | Position,
+		b?: number,
+		cmap?: ChunkMap
+	) {
+		if (a instanceof Position) {
+			this.x = a.x;
+			this.y = a.y;
+			this.cx = a.cx;
+			this.cy = a.cy;
+			this.chunk = a.chunk;
+			return;
+		}
+
+		if (typeof a === "number" && b !== undefined && cmap) {
+			const initX = Math.floor(a / Chunk.SIZE);
+			const initY = Math.floor(b / Chunk.SIZE);
+
+			this.x = modulo(Math.floor(a), Chunk.SIZE);
+			this.y = modulo(Math.floor(b), Chunk.SIZE);
+			this.cx = initX;
+			this.cy = initY;
+			this.chunk = cmap.getChunk(initX, initY);
+			return;
+		}
+
+		throw new TypeError("Invalid constructor parameters");
+	}
+
+
+
+	move(d: {x: number, y: number}, cmap: ChunkMap) {
+		this.x += d.x;
+		this.y += d.y;
+
+		// Update chunk
+		if (this.x >= Chunk.SIZE) {
+			this.x -= Chunk.SIZE;
+			this.cx++;
+			this.chunk = cmap.getChunk(this.cx, this.cy);
+		}
+		
+		if (this.y >= Chunk.SIZE) {
+			this.y -= Chunk.SIZE;
+			this.cy++;
+			this.chunk = cmap.getChunk(this.cx, this.cy);
+		}
+
+		if (this.x < 0) {
+			this.x += Chunk.SIZE;
+			this.cx--;
+			this.chunk = cmap.getChunk(this.cx, this.cy);
+		}
+
+		if (this.y < 0) {
+			this.y += Chunk.SIZE;
+			this.cy--;
+			this.chunk = cmap.getChunk(this.cx, this.cy);
+		}
+	}
+}
 
 
 
@@ -110,39 +173,11 @@ export class ChunkMap {
 
 
 
-	private movePosition(p: Position, d: {x: number, y: number}) {
-		p.x += d.x;
-		p.y += d.y;
-
-		// Update chunk
-		if (p.x >= Chunk.SIZE) {
-			p.x -= Chunk.SIZE;
-			p.cx++;
-			p.chunk = this.getChunk(p.cx, p.cy);
-		}
-		
-		if (p.y >= Chunk.SIZE) {
-			p.y -= Chunk.SIZE;
-			p.cy++;
-			p.chunk = this.getChunk(p.cx, p.cy);
-		}
-
-		if (p.x < 0) {
-			p.x += Chunk.SIZE;
-			p.cx--;
-			p.chunk = this.getChunk(p.cx, p.cy);
-		}
-
-		if (p.y < 0) {
-			p.y += Chunk.SIZE;
-			p.cy--;
-			p.chunk = this.getChunk(p.cx, p.cy);
-		}
-	}
+	
 
 	getDanger(car: Car, range: number) {
 		let finalSpeed = Infinity;
-		const CAR_PASSAGE_LENGTH = 1 + CAR_SIZE/2;
+		const CAR_PASSAGE_LENGTH = 1 + CAR_SIZE;
 		const invSpeed = 1 / car.speed;
 
 		function limSpeed(lim: number) {
@@ -172,24 +207,16 @@ export class ChunkMap {
 
 
 		
-		const initX = Math.floor(car.x / Chunk.SIZE);
-		const initY = Math.floor(car.y / Chunk.SIZE);
-		const pos = {
-			x: modulo(Math.floor(car.x), Chunk.SIZE),
-			y: modulo(Math.floor(car.y), Chunk.SIZE),
-			cx: initX,
-			cy: initY,
-			chunk: this.getChunk(initX, initY)
-		};
-
+		const pos = new Position(car.x, car.y, this);
 
 		let fastPrioritySpeed = 0;
+		let fastPriorityAcceleration = Infinity;
 		let slowPrioritySpeed = Infinity;
 
 
 		// Check cars in front
 		for (let dist = 1; dist < range; dist++) {
-			this.movePosition(pos, d);
+			pos.move(d, this)
 
 			const road = pos.chunk.getRoad(Math.floor(pos.x), Math.floor(pos.y));
 			if ((road & 0x7) === 0) {
@@ -249,24 +276,24 @@ export class ChunkMap {
 				// continue;
 			
 
-			const entryDist = Math.max(dist - realMove - CAR_SIZE/2, 0);
-			const exitDist = entryDist + CAR_PASSAGE_LENGTH;
+			let entryDist = dist - realMove - CAR_SIZE/2;
+			let exitDist = entryDist + CAR_PASSAGE_LENGTH;
+			if (entryDist < 0) {
+				entryDist = 0;
+				if (exitDist < 0) {
+					exitDist = 0;
+				}
+			}
 
 			const runCheck = (
 				turnDir: {x: number, y: number},
 				opDir: Direction,
 				dir: Direction
 			) => {
-				const check = {
-					x: pos.x,
-					y: pos.y,
-					cx: pos.cx,
-					cy: pos.cy,
-					chunk: pos.chunk
-				};
+				const check = new Position(pos);
 
 				for (let checkDist = 1; checkDist < range; checkDist++) {
-					this.movePosition(check, turnDir);
+					check.move(turnDir, this);
 
 					const road = check.chunk.getRoad(Math.floor(check.x), Math.floor(check.y));
 
@@ -299,15 +326,25 @@ export class ChunkMap {
 						continue;
 
 					const over_realMove = getCellDist(over.direction, over.x, over.y);
-					const over_entryDist = Math.max(checkDist - over_realMove - CAR_SIZE/2, 0);
-					const over_exitDist = over_entryDist + CAR_PASSAGE_LENGTH;
+					let over_entryDist = checkDist - over_realMove - CAR_SIZE/2;
+					let over_exitDist = over_entryDist + CAR_PASSAGE_LENGTH;
+					if (over_entryDist < 0) {
+						over_entryDist = 0;
+						if (over_exitDist < 0) {
+							over_exitDist = 0;
+						}
+					}
 
-					const fastSpeed = exitDist * over.speed / over_entryDist;
-					if (fastSpeed > fastPrioritySpeed)
+					const fastSpeed = exitDist * over.speedLimit / over_entryDist;
+					if (fastSpeed > fastPrioritySpeed) {
 						fastPrioritySpeed = fastSpeed;
+						fastPriorityAcceleration = .5 * (fastSpeed*fastSpeed -
+							car.speed*car.speed) / entryDist;
+					}
 
 
 					const slowSpeed = entryDist * over.speed / over_exitDist;
+
 					if (slowSpeed < slowPrioritySpeed)
 						slowPrioritySpeed = slowSpeed;
 
@@ -319,7 +356,7 @@ export class ChunkMap {
 				runCheck(rd, rop, rdir);
 			}
 
-			if (checkRight) {
+			if (checkLeft) {
 				runCheck(ld, lop, ldir)
 			}
 		}
@@ -327,14 +364,10 @@ export class ChunkMap {
 
 
 
-		if (fastPrioritySpeed > finalSpeed) {
-			limSpeed(slowPrioritySpeed);
-		}
-
-
 		return {
 			lim: finalSpeed,
 			fast: fastPrioritySpeed,
+			acceleration: fastPriorityAcceleration,
 			slow: slowPrioritySpeed
 		};
 	}

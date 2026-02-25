@@ -43,8 +43,8 @@ export class Game extends GameState {
 			x: 1,
 			y: y+3,
 			color: CarColor.RED,
-			rythm: 	41,
-			couldown: 1000000,
+			rythm: 	35,
+			couldown: 1,
 			direction: Direction.RIGHT,
 			count: Infinity
 		});
@@ -53,8 +53,8 @@ export class Game extends GameState {
 			x: 14,
 			y: y+8,
 			color: CarColor.RED,
-			rythm: 41,
-			couldown: 0,
+			rythm: 61,
+			couldown: 1,
 			direction: Direction.UP,
 			count: Infinity
 		});
