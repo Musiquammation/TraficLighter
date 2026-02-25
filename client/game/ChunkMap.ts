@@ -136,7 +136,18 @@ export class ChunkMap {
 	setRoad(x: number, y: number, road: roadtypes.road_t) {
 		const p = ChunkMap.getPoint(x, y);
 		const c = this.getChunk(p.cx, p.cy);
+
+		const currentRoadType = c.getRoad(p.rx, p.ry) & 0x7;
+		if (currentRoadType === roadtypes.types.SPAWNER || currentRoadType === roadtypes.types.CONSUMER)
+			return;
+
 		c.setRoad(p.rx, p.ry, road);
+	}
+
+	getLight(x: number, y: number) {
+		const p = ChunkMap.getPoint(x, y);
+		const c = this.getChunk(p.cx, p.cy);
+		return c.getLight(p.rx, p.ry);
 	}
 
 
@@ -217,15 +228,13 @@ export class ChunkMap {
 		// Check cars in front
 		for (let dist = 0; dist < range; dist++) {
 			const road = pos.chunk.getRoad(Math.floor(pos.x), Math.floor(pos.y));
-			if ((road & 0x7) === 0) {
-				limDist(dist - CAR_SIZE/2 - realMove);
-				break; // no more road to check
-			}
 
+			let finish = false;
 			let checkLeft = false;
 			let checkRight = false;
 			switch ((road & 0x7) as roadtypes.types) {
 			case roadtypes.types.VOID:
+				finish = true;
 				break;
 
 			case roadtypes.types.ROAD:
@@ -252,12 +261,20 @@ export class ChunkMap {
 				checkRight = true;
 				break;
 
-			case roadtypes.types.FINAL:
+			case roadtypes.types.LIGHT:
+				if ((road >> 6) === car.direction && (road & (1<<3)) === 0)
+					finish = true;
+				
+				checkRight = true;
 				break;
 
 			}
 
 
+			if (finish) {
+				limDist(dist - CAR_SIZE/2 - realMove);
+				break; // no more road to check
+			}
 
 			if (dist > 0) {
 				const over = pos.chunk.getCar(Math.floor(pos.x), Math.floor(pos.y));
@@ -273,8 +290,10 @@ export class ChunkMap {
 			}
 
 
-			// if (!checkRight && !checkLeft)
-				// continue;
+			pos.move(d, this);
+			if (!checkRight && !checkLeft) {
+				continue;
+			}
 			
 
 			let entryDist = (dist+1) - realMove - CAR_SIZE/2;
@@ -312,6 +331,12 @@ export class ChunkMap {
 
 					case roadtypes.types.PRIORITY:
 						if ((road >> 6) == opDir) {
+							shouldBreak = true;
+						}
+						break;
+
+					case roadtypes.types.LIGHT:
+						if ((road >> 6) == opDir && (road & (1<<3)) === 0) {
 							shouldBreak = true;
 						}
 						break;
@@ -355,7 +380,6 @@ export class ChunkMap {
 			}
 
 
-			pos.move(d, this);
 
 			if (checkRight) {
 				runCheck(rd, d, rop);

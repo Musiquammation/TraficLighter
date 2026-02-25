@@ -13,6 +13,7 @@ import { ImageLoader } from "../handler/ImageLoader";
 import { CarColor } from "./CarColor";
 import { PathGraph } from "./PathGraph";
 import { modulo } from "./modulo";
+import { lightSizeEditor } from "./LightSizeEditor";
 
 
 
@@ -36,7 +37,6 @@ export class Game extends GameState {
 
 		this.chunkMap.setRoad(50, y+3, roadtypes.types.CONSUMER);
 		this.chunkMap.setRoad(14, y, roadtypes.types.CONSUMER);
-		this.chunkMap.setRoad(14, y+4, roadtypes.types.PRIORITY | (1<<6));
 
 		const chunk = this.chunkMap.getChunk(0, 0);
 		chunk.appendCarSpawner({
@@ -53,12 +53,13 @@ export class Game extends GameState {
 			x: 14,
 			y: y+8,
 			color: CarColor.RED,
-			rythm: 120,
+			rythm: 50,
 			couldown: 55,
 			direction: Direction.UP,
 			count: Infinity
 		});
 
+		chunk.appendLight({flag: 0}, 14, y+4)
 	}
 
 
@@ -166,7 +167,7 @@ export class Game extends GameState {
 			const road = this.chunkMap.getRoad(x, y);
 			if (rightDown) {
 				let type = ((road & 0x7) + 1);
-				if (type >= roadtypes.types.FINAL) {
+				if (type >= roadtypes.types.SPAWNER) {
 					type = 1;
 				}
 
@@ -176,7 +177,22 @@ export class Game extends GameState {
 			}
 
 			const roadScroll = roadtypes.onScroll(road, e.deltaY);
-			if (roadScroll) {
+			if (roadScroll === 'light') {
+				const light = this.chunkMap.getLight(x, y);
+				if (light) {
+					lightSizeEditor.get(light.flag, (road >> 4) & 0x3).then(o => {
+						light.flag = o.flag;
+
+						let nextRoad = roadtypes.types.LIGHT;
+						console.log(o);
+						nextRoad |= road & (3<<6); // direction
+						nextRoad |= o.cycleSize << 4;
+						this.chunkMap.setRoad(x, y, nextRoad);
+					});
+					
+				}
+
+			} else if (roadScroll) {
 				this.chunkMap.setRoad(x, y, roadScroll);
 			} else if (!leftDown && !rightDown) {
 				this.camera.z -= this.camera.z * e.deltaY / 1000;
@@ -187,7 +203,7 @@ export class Game extends GameState {
 
 	frame(game: GameHandler) {
 		for (let [_, chunk] of this.chunkMap) {
-			chunk.runEvents();
+			chunk.runEvents(this.frameCount);
 		}
 
 		// Behave cars

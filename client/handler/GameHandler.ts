@@ -27,8 +27,10 @@ export class GameHandler {
 			turn_select: "assets/turn/select.png",
 			turn_full: "assets/turn/full.png",
 			yield: "assets/yield.png",
+			light_red: "assets/lights/red.png",
+			light_orange: "assets/lights/orange.png",
+			light_green: "assets/lights/green.png",
 		});
-
 	}
 	
 

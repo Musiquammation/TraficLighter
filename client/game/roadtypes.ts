@@ -1,5 +1,7 @@
 import { ImageLoader } from "../handler/ImageLoader";
+import { ChunkMap } from "./ChunkMap";
 import {Direction} from "./Direction"
+import { lightSizeEditor, LightSizeEditor } from "./LightSizeEditor";
 
 export namespace roadtypes {
 	export type road_t = number;
@@ -31,14 +33,24 @@ export namespace roadtypes {
 		 */
 		PRIORITY,
 
+
+		/**
+		 * [+3]: 1=green ; 0=red
+		 * [+4, +5]: cycle size {00=4, 01=8, 10=16, 11=32}
+		 * [+6, +7]: origin direction
+		 */
+		LIGHT,
+
+
+		/**
+		 * No data
+		 */
 		SPAWNER,
 
 		/**
 		 * [+3,+4,+5,+6,+7]: color
 		 */
 		CONSUMER,
-
-		FINAL
 	}
 
 	export enum TurnDirection {
@@ -140,8 +152,14 @@ export namespace roadtypes {
 
 		case types.PRIORITY:
 		{
-			const direction = Math.PI/2 * ((road >> 6) & 0x3);
-			drawImage('yield', direction);
+			drawImage('yield', Math.PI/2 * ((road >> 6) & 0x3));
+			break;
+		}
+
+		case types.LIGHT:
+		{
+			drawImage(road & (1<<3) ? 'light_green' : 'light_red',
+				Math.PI/2 * ((road >> 6) & 0x3));
 			break;
 		}
 
@@ -171,6 +189,7 @@ export namespace roadtypes {
 
 		case types.TURN:
 		case types.PRIORITY:
+		case types.LIGHT:
 		{
 			let dir = (road >> 6) & 0x3;
 			dir++;
@@ -186,7 +205,7 @@ export namespace roadtypes {
 		}
 	}
 
-	export function onScroll(road: road_t, delta: number): road_t | null {
+	export function onScroll(road: road_t, delta: number): road_t | 'light' | null {
 		switch (road & 0x7) {
 		case types.VOID:
 		case types.ROAD:
@@ -210,6 +229,9 @@ export namespace roadtypes {
 			road = (road & ~(0x7 << 3)) | ((type << 3));
 			return road;
 		}
+
+		case types.LIGHT:
+			return 'light';
 
 		default:
 			return types.VOID;

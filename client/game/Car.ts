@@ -33,8 +33,8 @@ const colors = [
 
 export class Car {
 	direction: Direction;
-	acceleration = .002;
-	deceleration = .005;
+	acceleration = .001;
+	deceleration = .003;
 	speedLimit = .1;
 	speed = this.speedLimit;
 	nextSpeed = this.speedLimit;
@@ -250,6 +250,12 @@ export class Car {
 
 			break;
 		}
+
+		case roadtypes.types.LIGHT:
+		{
+
+			break;
+		}
 		
 		}
 		
@@ -304,6 +310,7 @@ export class Car {
 		case roadtypes.types.PRIORITY:
 		case roadtypes.types.SPAWNER:
 		case roadtypes.types.CONSUMER:
+		case roadtypes.types.LIGHT:
 			basicMove();
 			return;
 
@@ -356,7 +363,6 @@ export class Car {
 		}
 
 
-		
 		}
 	}
 }

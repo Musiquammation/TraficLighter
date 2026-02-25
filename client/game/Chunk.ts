@@ -2,9 +2,7 @@ import { ImageLoader } from "../handler/ImageLoader";
 import { modulo } from "./modulo";
 import { Car } from "./Car";
 import { CarColor } from "./CarColor";
-import { ChunkMap } from "./ChunkMap";
 import { roadtypes } from "./roadtypes";
-import { HoleArray } from "./HoleArray";
 import { Direction } from "./Direction";
 
 interface CarSpawner {
@@ -18,13 +16,22 @@ interface CarSpawner {
 }
 
 
-
+interface Light {
+	flag: number;
+};
 
 export class Chunk {
 	static SIZE = 64;
 
 	static getIdx(x: number, y: number) {
 		return y * Chunk.SIZE + x;
+	}
+
+	static getPos(idx: number) {
+		return {
+			x: idx % Chunk.SIZE,
+			y: Math.floor(idx / Chunk.SIZE),
+		}
 	}
 
 	x: number;
@@ -34,7 +41,8 @@ export class Chunk {
 	private cars: Car[][] = Array(254).fill(null).map(() => []);
 	private grid = new Uint8Array(Chunk.SIZE * Chunk.SIZE);
 	private carGrid = new Uint8Array(Chunk.SIZE * Chunk.SIZE).fill(255);
-	private carSpawners = new HoleArray<CarSpawner>();
+	private carSpawners = new Map<number, CarSpawner>();
+	private lights = new Map<number, Light>();
 
 	constructor(x: number, y: number) {
 		this.x = x;
@@ -90,7 +98,8 @@ export class Chunk {
 	}
 
 
-	runEvents() {
+	runEvents(frameCount: number) {
+		// Run car spawners
 		for (const [idx, spawner] of this.carSpawners) {
 			spawner.couldown--;
 			if (spawner.couldown <= 0) {
@@ -104,7 +113,7 @@ export class Chunk {
 				if (this.appendCar(car, spawner.x, spawner.y)) {
 					spawner.count--;
 					if (spawner.count <= 0) {
-						this.carSpawners.remove(idx);
+						this.carSpawners.delete(idx);
 					}
 
 				}
@@ -112,15 +121,52 @@ export class Chunk {
 				spawner.couldown += spawner.rythm;
 			}
 		}
+
+		// Run lights
+		const frameCountMod = [
+			Math.floor(frameCount/(8*30)) % 4,
+			Math.floor(frameCount/(4*30)) % 8,
+			Math.floor(frameCount/(2*30)) % 16,
+			Math.floor(frameCount/(1*30)) % 32
+		];
+
+		console.log(frameCountMod[0]);
+
+		for (const [idx, light] of this.lights) {
+			const flag = light.flag;
+
+			const pos = Chunk.getPos(idx);
+			const road = this.getRoad(pos.x, pos.y);
+
+			// Check type
+			if ((road & 0x7) !== roadtypes.types.LIGHT) {
+				this.lights.delete(idx);
+				continue;
+			}
+
+			const sizeSlot = frameCountMod[(road >> 4) & 0x3];
+			const now = !!(flag & (1 << sizeSlot));
+
+			this.setRoad(pos.x, pos.y,
+				now ? (road | (1<<3)) : (road & ~(1<<3)));
+
+		}
 	}
 
 
 
 	appendCarSpawner(spawner: CarSpawner) {
-		const idx = this.carSpawners.append(spawner);
-		const road = roadtypes.types.SPAWNER | (idx << 3);
+		this.carSpawners.set(Chunk.getIdx(spawner.x, spawner.y), spawner);
+		const road = roadtypes.types.SPAWNER;
 		this.setRoad(spawner.x, spawner.y, road);
 	}
+
+	appendLight(light: Light, x: number, y: number) {
+		this.lights.set(Chunk.getIdx(x, y), light);
+		const road = roadtypes.types.LIGHT;
+		this.setRoad(x, y, road);
+	}
+
 
 	*iterateCars() {
 		for (const car of this.cars) {
@@ -203,5 +249,9 @@ export class Chunk {
 		}
 
 		return 'empty';
+	}
+
+	getLight(x: number, y: number) {
+		return this.lights.get(Chunk.getIdx(x, y));
 	}
 }

@@ -12,9 +12,6 @@ canvas {
 }
 
 
-.hidden {
-	display: none;
-}
 
 #fps {
 	display: block;
@@ -28,3 +25,6 @@ canvas {
 
 
 
+.hidden {
+	display: none;
+}
