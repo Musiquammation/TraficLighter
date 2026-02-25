@@ -238,6 +238,9 @@ export class Car {
 				speedTarget = speed.slow;
 			}
 
+			if (speedTarget < 0)
+				speedTarget = 0;
+
 
 			break;
 		}

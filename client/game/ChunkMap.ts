@@ -215,9 +215,7 @@ export class ChunkMap {
 
 
 		// Check cars in front
-		for (let dist = 1; dist < range; dist++) {
-			pos.move(d, this)
-
+		for (let dist = 0; dist < range; dist++) {
 			const road = pos.chunk.getRoad(Math.floor(pos.x), Math.floor(pos.y));
 			if ((road & 0x7) === 0) {
 				limDist(dist - CAR_SIZE/2 - realMove);
@@ -231,7 +229,8 @@ export class ChunkMap {
 				break;
 
 			case roadtypes.types.ROAD:
-				checkRight = true;
+				if (dist > 0)
+					checkRight = true;
 				break;
 
 			case roadtypes.types.TURN:
@@ -259,23 +258,26 @@ export class ChunkMap {
 			}
 
 
-			const over = pos.chunk.getCar(Math.floor(pos.x), Math.floor(pos.y));
-			if (over === 'full') {
-				limSpeed(0);
-				break;
-			}
 
-			if (over !== 'empty') {
-				const carsDist = Math.abs(over.x - car.x) + Math.abs(over.y - car.y);
-				limDist(carsDist - 1);
-			}	
+			if (dist > 0) {
+				const over = pos.chunk.getCar(Math.floor(pos.x), Math.floor(pos.y));
+				if (over === 'full') {
+					limSpeed(0);
+					break;
+				}
+	
+				if (over !== 'empty') {
+					const carsDist = Math.abs(over.x - car.x) + Math.abs(over.y - car.y);
+					limDist(carsDist - 1);
+				}				
+			}
 
 
 			// if (!checkRight && !checkLeft)
 				// continue;
 			
 
-			let entryDist = dist - realMove - CAR_SIZE/2;
+			let entryDist = (dist+1) - realMove - CAR_SIZE/2;
 			let exitDist = entryDist + CAR_PASSAGE_LENGTH;
 			if (entryDist < 0) {
 				entryDist = 0;
@@ -286,8 +288,8 @@ export class ChunkMap {
 
 			const runCheck = (
 				turnDir: {x: number, y: number},
+				frontDir: {x: number, y: number},
 				opDir: Direction,
-				dir: Direction
 			) => {
 				const check = new Position(pos);
 
@@ -309,8 +311,9 @@ export class ChunkMap {
 						break;
 
 					case roadtypes.types.PRIORITY:
-						if ((road >> 6) == dir)
+						if ((road >> 6) == opDir) {
 							shouldBreak = true;
+						}
 						break;
 					}
 
@@ -351,12 +354,15 @@ export class ChunkMap {
 				}
 			}
 
+
+			pos.move(d, this);
+
 			if (checkRight) {
-				runCheck(rd, rop, rdir);
+				runCheck(rd, d, rop);
 			}
 
 			if (checkLeft) {
-				runCheck(ld, lop, ldir)
+				runCheck(ld, d, lop);
 			}
 		}
 
