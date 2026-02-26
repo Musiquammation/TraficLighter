@@ -22,6 +22,8 @@ export class ChunkMap {
 	}
 
 	private chunks = new Map<number, Chunk>();
+	time = 0;
+
 
 	getChunk(x: number, y: number) {
 		const key = produceChunkKey(x, y);
@@ -45,11 +47,9 @@ export class ChunkMap {
 	*iterateCars() {
 		for (const [_, chunk] of this.chunks)
 			for (const car of chunk.iterateCars())
-				yield { car, chunk};
-			
-		
+				yield {car, chunk};
+				
 	}
-
 
 
 	getRoad(x: number, y: number) {

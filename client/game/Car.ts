@@ -44,28 +44,38 @@ export class Car {
 	color: CarColor;
 	frameLastPositionUpdate = -1;
 	alive = true;
+	
 	id = nextCarId++;
-
+	spawnerId: number;
+	
 	x: number;
 	y: number;
 	lastBlockX: number;
 	lastBlockY: number;
+	score: number;
 
-	constructor(x: number, y: number, direction: Direction, color: CarColor) {
+	constructor(
+		x: number,
+		y: number,
+		spawnerId: number,
+		direction: Direction,
+		color: CarColor,
+		score: number
+	) {
 		this.x = x;
 		this.y = y;
-		this.direction = direction;
-		this.color = color;
 		this.lastBlockX = Math.floor(x);
 		this.lastBlockY = Math.floor(y);
+
+		this.spawnerId = spawnerId;
+		this.direction = direction;
+		this.color = color;
+		this.score = score;
 	}
 
 
 
 	draw(ctx: CanvasRenderingContext2D, road: roadtypes.road_t) {
-
-		
-
 		ctx.fillStyle = colors[modulo(this.id, colors.length)];
 		
 
@@ -162,21 +172,21 @@ export class Car {
 					break;
 
 				case roadtypes.TurnDirection.FRONT_RIGHT:
-					if (game.frameCount % 2) {
+					if (this.spawnerId % 2) {
 						this.rotatingToRight = true;
 						this.rotationStep = 0;
 					}
 					break;
 
 				case roadtypes.TurnDirection.FRONT_LEFT:
-					if (game.frameCount % 2) {
+					if (this.spawnerId % 2) {
 						this.rotatingToRight = false;
 						this.rotationStep = 0;
 					}
 					break;
 
 				case roadtypes.TurnDirection.LEFT_AND_RIGHT:
-					if (game.frameCount % 2) {
+					if (this.spawnerId % 2) {
 						this.rotatingToRight = true;
 						this.rotationStep = 0;
 					} else {
@@ -187,7 +197,7 @@ export class Car {
 					break;
 
 				case roadtypes.TurnDirection.ALL:
-					switch (game.frameCount % 3) {
+					switch (this.spawnerId % 3) {
 					case 0:
 						this.rotatingToRight = true;
 						this.rotationStep = 0;

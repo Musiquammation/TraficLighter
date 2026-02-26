@@ -14,15 +14,20 @@ import { CarColor } from "./CarColor";
 import { PathGraph } from "./PathGraph";
 import { modulo } from "./modulo";
 import { lightSizeEditor } from "./LightSizeEditor";
+import { TransitionState } from "../states/TransitionState";
 
 
+const timeLeftDiv = document.getElementById("timeLeft")!;
+const scoreDiv = document.getElementById("score")!;
 
 export class Game extends GameState {
-	camera: Vector3 = {x: 8, y: 38, z: 80};
+	private camera: Vector3 = {x: 8, y: 38, z: 80};
 
 	chunkMap = new ChunkMap();
-	graph = new PathGraph(this.chunkMap);
-	frameCount = 0;
+	private graph = new PathGraph(this.chunkMap);
+	private carFrame = 0;
+	private runningCars = false;
+	private score = 0;
 	
 	private test() {
 		const y = 33;
@@ -47,7 +52,9 @@ export class Game extends GameState {
 			rythm: 	50,
 			couldown: 1,
 			direction: Direction.RIGHT,
-			count: Infinity
+			count: Infinity,
+			currentId: 0,
+			score: 1
 		});
 
 		chunk.appendCarSpawner({
@@ -55,10 +62,15 @@ export class Game extends GameState {
 			y: y+8,
 			color: CarColor.RED,
 			rythm: 70,
-			couldown: 55,
+			couldown: 0,
 			direction: Direction.UP,
-			count: Infinity
+			count: Infinity,
+			currentId: 0,
+			score: 3
 		});
+
+		// this.chunkMap.time = 80*60;
+		this.chunkMap.time = 3*60;
 	}
 
 
@@ -91,9 +103,23 @@ export class Game extends GameState {
 	}
 
 
+	private handleHTML() {
+		document.getElementById("gameView")?.classList.remove("hidden");
+
+		const pause = document.getElementById("pause");
+		if (pause) {
+			pause.classList.add("inPause");
+			pause.onclick = () => {
+				pause.classList.toggle("inPause");
+				this.runningCars = !this.runningCars;
+			}
+		}
+	}
+
 	enter(data: any, input: InputHandler): void {
 		this.test();
 
+		this.handleHTML();
 
 		let lastX = 0;
 		let lastY = 0;
@@ -199,18 +225,22 @@ export class Game extends GameState {
 
 	}
 
-	frame(game: GameHandler) {
+	runCars() {
 		for (let [_, chunk] of this.chunkMap) {
-			chunk.runEvents(this.frameCount);
+			chunk.runEvents(this.carFrame);
 		}
 
 		// Behave cars
 		for (let {car, chunk} of this.chunkMap.iterateCars()) {
+			if (!car.alive)
+				continue;
+
 			const x = modulo(Math.floor(car.x), Chunk.SIZE);
 			const y = modulo(Math.floor(car.y), Chunk.SIZE);
 			const road = chunk.getRoad(x, y);
 			if (car.behave(road, this)) {
 				car.alive = false;
+				this.score += car.score;
 			}
 		}
 
@@ -224,11 +254,20 @@ export class Game extends GameState {
 		}
 
 
-		this.chunkMap.updateCarGrid(this.frameCount);
+		this.chunkMap.updateCarGrid(this.carFrame);
 
-		this.frameCount++;
+		this.carFrame++;
+	}
 
-		return null;
+	frame(game: GameHandler) {
+		if (this.runningCars)
+			this.runCars();
+
+		if (this.carFrame < this.chunkMap.time)
+			return null;
+
+		return new TransitionState(this);
+		
 	}
 
 
@@ -248,17 +287,36 @@ export class Game extends GameState {
 		}
 	}
 
+	private drawStats(ctx: CanvasRenderingContext2D) {
+		// time at format mm:ss.u
+		let leftTime: string = (() => {
+			const time = Math.max(this.chunkMap.time - this.carFrame, 0);
+			const totalSeconds = Math.floor(time / 60);
+			const minutes = Math.floor(totalSeconds / 60);
+			const seconds = totalSeconds % 60;
+			const milliseconds = Math.floor((time % 60) / 6);
+			return `${minutes.toString().padStart(1, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds}`;
+		})();
+
+		timeLeftDiv.innerText = leftTime;
+		scoreDiv.innerText = this.score.toString().padStart(5, "0");
+	}
+
 	draw(args: DrawStateData): void {
+		// Draw game
 		args.followCamera();
-		
 		this.drawGrid(args.ctx, args.imageLoader);
 		this.drawCars(args.ctx);
-
 		args.unfollowCamera();
+
+
+		// Draw stats
+		this.drawStats(args.ctx);
 	}
 
 	exit() {
-		
+		document.getElementById("gameView")?.classList.add("hidden");
+		return {score: this.score};	
 	}
 
 	getCamera() {

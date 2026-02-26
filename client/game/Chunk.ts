@@ -13,6 +13,8 @@ interface CarSpawner {
 	couldown: number;
 	direction: Direction;
 	count: number;
+	currentId: number;
+	score: number;
 }
 
 
@@ -129,9 +131,13 @@ export class Chunk {
 				const car = new Car(
 					this.x * Chunk.SIZE + spawner.x + .5,
 					this.y * Chunk.SIZE + spawner.y + .5,
+					spawner.currentId,
 					spawner.direction,
-					spawner.color
+					spawner.color,
+					spawner.score
 				);
+
+				spawner.currentId++;
 
 				if (this.appendCar(car, spawner.x, spawner.y)) {
 					spawner.count--;

@@ -102,16 +102,14 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 	}
 
 
-	const realMove = getCellDist(car.direction, car.x, car.y);
-	const d = getDirectionDelta(car.direction);
-
-	const rdir = rotateDirectionToRight(car.direction);
-	const ldir = rotateDirectionToLeft(car.direction);
-	const odir = opposeDirection(car.direction);
-	const rd = getDirectionDelta(rdir);
-	const ld = getDirectionDelta(ldir);
-	const rop = opposeDirection(rdir);
-	const lop = opposeDirection(ldir);
+	let realMove = getCellDist(car.direction, car.x, car.y);
+	let d = getDirectionDelta(car.direction);
+	let rdir = rotateDirectionToRight(car.direction);
+	let ldir = rotateDirectionToLeft(car.direction);
+	let rd = getDirectionDelta(rdir);
+	let ld = getDirectionDelta(ldir);
+	let rop = opposeDirection(rdir);
+	let lop = opposeDirection(ldir);
 
 
 	

@@ -23,6 +23,43 @@ canvas {
 	font-family: 'Courier New', Courier, monospace;
 }
 
+#timeLeft {
+	display: block;
+	position: absolute;
+	left: 10px;
+	top: 10px;
+	color: white;
+	background-color: #000a;
+	font-size: 3vmin;
+	font-family:'Courier New', Courier, monospace;
+}
+
+#score {
+	display: block;
+	position: absolute;
+	right: 10px;
+	top: 10px;
+	color: white;
+	background-color: #000a;
+	font-size: 3vmin;
+	font-family:'Courier New', Courier, monospace;
+}
+
+#pause {
+	display: block;
+	position: absolute;
+	left: 10px;
+	top: calc(3vmin + 20px);
+	width: 5vmin;
+	height: 5vmin;
+	background-color: green;
+}
+
+#pause.inPause {
+	background-color: red;
+}
+
+
 
 
 .hidden {
