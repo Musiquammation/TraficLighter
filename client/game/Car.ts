@@ -4,8 +4,9 @@ import { ChunkMap } from "./ChunkMap";
 import { Direction, getAttach, rotateDirectionToLeft, rotateDirectionToRight } from "./Direction";
 import { Game } from "./Game";
 import { roadtypes } from "./roadtypes";
-import { CAR_SIZE } from "./CAR_SIZE";
+import { CAR_LINE, CAR_SIZE } from "./CAR_SIZE";
 import { modulo } from "./modulo";
+import { getDanger } from "./getDanger";
 
 
 const RENDER_DISTANCE = 16;
@@ -13,22 +14,22 @@ const RENDER_DISTANCE = 16;
 let nextCarId = 0;
 
 const colors = [
-  "#FF0000", // Rouge pur
-  "#FF3D00", // Rouge-orangé intense
-  "#FF6D00", // Orange vif
-  "#FF9100", // Orange saturé
-  "#FFD600", // Jaune vif
-  "#AEEA00", // Vert citron intense
-  "#00E676", // Vert néon
-  "#00FF00", // Vert pur
-  "#00F0FF", // Cyan électrique
-  "#00B0FF", // Bleu azur saturé
-  "#2979FF", // Bleu vif
-  "#3D5AFE", // Indigo électrique
-  "#651FFF", // Violet saturé
-  "#D500F9", // Magenta électrique
-  "#FF00FF", // Magenta pur
-  "#FF1744"  // Rose rouge intense
+	"#FF0000",
+	"#FF3D00",
+	"#FF6D00",
+	"#FF9100",
+	"#FFD600",
+	"#AEEA00",
+	"#00E676",
+	"#00FF00",
+	"#00F0FF",
+	"#00B0FF",
+	"#2979FF",
+	"#3D5AFE",
+	"#651FFF",
+	"#D500F9",
+	"#FF00FF",
+	"#FF1744"
 ];
 
 export class Car {
@@ -62,7 +63,6 @@ export class Car {
 
 
 	draw(ctx: CanvasRenderingContext2D, road: roadtypes.road_t) {
-		ctx.save();
 
 		
 
@@ -71,12 +71,14 @@ export class Car {
 
 		let x: number;
 		let y: number;
+		let angle: number;
 
 		switch (road & 0x7) {
 		case roadtypes.types.VOID:
 		case roadtypes.types.ROAD:
 			x = this.x;
 			y = this.y;
+			angle = Math.PI/2 * this.direction;
 			break;
 	
 		case roadtypes.types.TURN:
@@ -85,10 +87,12 @@ export class Car {
 				const m = getAttach(this.direction, this.rotatingToRight, this.rotationStep);
 				x = Math.floor(this.x) + m.x;
 				y = Math.floor(this.y) + m.y;
+				angle = m.angle - Math.PI/2; 
 
 			} else {
 				x = this.x;
 				y = this.y;
+				angle = Math.PI/2 * this.direction;
 			}
 			break;
 		}
@@ -96,12 +100,25 @@ export class Car {
 		default:
 			x = this.x;
 			y = this.y;
+			angle = Math.PI/2 * this.direction;
 		}
 
-		ctx.fillRect(x - CAR_SIZE/2, y - CAR_SIZE/2, CAR_SIZE, CAR_SIZE);
+
+		ctx.save();
+		ctx.translate(x, y);
+		ctx.rotate(angle);
+
+		ctx.fillRect(-CAR_SIZE / 2, -CAR_LINE / 2, CAR_SIZE, CAR_LINE);
+
+		ctx.fillStyle = "black";
+		ctx.font = "1px consolas";
+		ctx.fillText(
+			modulo(this.id, 10).toString(),
+			-CAR_SIZE / 2,
+			CAR_SIZE / 2
+		);
 
 		ctx.restore();
-
 	}
 
 	behave(road: roadtypes.road_t, game: Game) {
@@ -226,11 +243,10 @@ export class Car {
 		case roadtypes.types.SPAWNER:
 		case roadtypes.types.CONSUMER:
 		{
-			const speed = game.chunkMap.getDanger(this, RENDER_DISTANCE);
+			const speed = getDanger(this, RENDER_DISTANCE, game.chunkMap);
 			if (speed.lim < speedTarget) {
 				speedTarget = speed.lim;
 			}
-
 
 			if ((speed.fast > speedTarget || speed.acceleration > this.acceleration)
 				&& speed.slow < speedTarget

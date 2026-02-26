@@ -56,6 +56,29 @@ export class Chunk {
 	}
 
 	setRoad(x: number, y: number, road: roadtypes.road_t) {
+		const currentRoad = this.getRoad(x, y);
+		const currentRoadType = currentRoad & 0x7;
+		
+		switch (currentRoadType) {
+		case roadtypes.types.SPAWNER:
+		case roadtypes.types.CONSUMER:
+			return;
+
+		case roadtypes.types.VOID:
+			if (currentRoad & (1<<3))
+				return;
+		}
+
+		if (currentRoadType === roadtypes.types.LIGHT) {
+			if ((road & 0x7) !== roadtypes.types.LIGHT) {
+				// Remove light
+				this.removeLight(x, y);
+			}
+		} else if ((road & 0x7) === roadtypes.types.LIGHT) {
+			// Append light
+			this.appendLight({flag: 0}, x, y);
+		}
+
 		const idx = Chunk.getIdx(x, y);
 		this.grid[idx] = road;
 	}
@@ -73,14 +96,14 @@ export class Chunk {
 			const realY = paddingY + y;
 			
 			for (let x = 0; x < Chunk.SIZE; x++) {
-				const realX = paddingX + x;
+				const obj = this.getRoad(x, y);
+				if (obj === 0)
+					continue;
 				
+				const realX = paddingX + x;
 				ctx.save();
 				ctx.translate(x, y);
-
-				const obj = this.getRoad(x, y);
 				roadtypes.draw(ctx, iloader, obj);
-
 				ctx.restore();
 				
 			}
@@ -130,8 +153,6 @@ export class Chunk {
 			Math.floor(frameCount/(1*30)) % 32
 		];
 
-		console.log(frameCountMod[0]);
-
 		for (const [idx, light] of this.lights) {
 			const flag = light.flag;
 
@@ -161,13 +182,11 @@ export class Chunk {
 		this.setRoad(spawner.x, spawner.y, road);
 	}
 
-	appendLight(light: Light, x: number, y: number) {
+	private appendLight(light: Light, x: number, y: number) {
 		this.lights.set(Chunk.getIdx(x, y), light);
-		const road = roadtypes.types.LIGHT;
-		this.setRoad(x, y, road);
 	}
 
-	removeLight(x: number, y: number) {
+	private removeLight(x: number, y: number) {
 		this.lights.delete(Chunk.getIdx(x, y));
 	}
 

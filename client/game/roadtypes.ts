@@ -12,7 +12,7 @@ export namespace roadtypes {
 	 */
 	export enum types {
 		/**
-		 * No data
+		 * [+3]: locked
 		 */
 		VOID = 0,
 
@@ -98,6 +98,12 @@ export namespace roadtypes {
 
 		switch (road & 0x7) {
 		case types.VOID:
+			if (road & (1<<3)) {
+				ctx.fillStyle = "black";
+				ctx.fillRect(0, 0, 1, 1);
+				return;
+			}
+			
 			return;
 
 		case types.ROAD:

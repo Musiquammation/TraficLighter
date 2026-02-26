@@ -91,11 +91,10 @@ export function getAttach(direction: Direction, rotatingToRight: boolean, step: 
 	}
 	
     const angle = startAngle + (endAngle - startAngle) * step;
-	console.log(cy, angle);
     const x = cx + radius * Math.cos(angle);
     const y = cy + radius * Math.sin(angle);
 
-    return { x, y };
+    return { x, y, angle };
 }
 
 export function getDirectionDelta(direction: Direction) {

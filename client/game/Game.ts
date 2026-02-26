@@ -37,6 +37,7 @@ export class Game extends GameState {
 
 		this.chunkMap.setRoad(50, y+3, roadtypes.types.CONSUMER);
 		this.chunkMap.setRoad(14, y, roadtypes.types.CONSUMER);
+		// this.chunkMap.setRoad(11, y+3, roadtypes.types.TURN | (2<<3));
 
 		const chunk = this.chunkMap.getChunk(0, 0);
 		chunk.appendCarSpawner({
@@ -53,13 +54,11 @@ export class Game extends GameState {
 			x: 14,
 			y: y+8,
 			color: CarColor.RED,
-			rythm: 50,
+			rythm: 70,
 			couldown: 55,
 			direction: Direction.UP,
 			count: Infinity
 		});
-
-		chunk.appendLight({flag: 0}, 14, y+4);
 	}
 
 
@@ -184,7 +183,6 @@ export class Game extends GameState {
 						light.flag = o.flag;
 
 						let nextRoad = roadtypes.types.LIGHT;
-						console.log(o);
 						nextRoad |= road & (3<<6); // direction
 						nextRoad |= o.cycleSize << 4;
 						this.chunkMap.setRoad(x, y, nextRoad);
