@@ -180,8 +180,8 @@ export class Chunk {
 
 
 	appendCarSpawner(spawner: CarSpawner) {
-		const x = modulo(spawner.x, Chunk.SIZE);
-		const y = modulo(spawner.y, Chunk.SIZE);
+		const x = spawner.x;
+		const y = spawner.y;
 		
 		this.carSpawners.set(Chunk.getIdx(x, y), spawner);
 		const road = roadtypes.types.SPAWNER |

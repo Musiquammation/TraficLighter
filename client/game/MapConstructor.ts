@@ -3,6 +3,7 @@ import { CarColor } from "./CarColor";
 import { ChunkMap } from "./ChunkMap";
 import { Chunk } from "./Chunk";
 import { roadtypes } from "./roadtypes";
+import { modulo } from "./modulo";
 
 interface CarSpawner {
 	x: number;
@@ -49,8 +50,8 @@ export class MapConstructor {
 			);
 
 			chunk.appendCarSpawner({
-				x: spawner.x,
-				y: spawner.y,
+				x: modulo(spawner.x, Chunk.SIZE),
+				y: modulo(spawner.y, Chunk.SIZE),
 				color: spawner.color,
 				rythm: spawner.rythm,
 				startCouldown: spawner.couldown,
@@ -61,6 +62,8 @@ export class MapConstructor {
 				score: spawner.score,
 				currentId: i
 			});
+
+			console.log(spawner);
 		}
 
 		for (const road of this.roads) {

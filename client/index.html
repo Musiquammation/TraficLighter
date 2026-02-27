@@ -42,7 +42,8 @@
 		<script>
 			window.IMG_ROOT_PATH = "";
 			window.DEBUG = true;
-			import("/index.ts").then(m => m.startGame());
+
+			import("/index.ts").then(m => {m.startGame()});
 		</script>
 	</body>
 </html>

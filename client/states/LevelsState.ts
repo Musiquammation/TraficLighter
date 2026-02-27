@@ -34,7 +34,7 @@ export class LevelsState extends GameState {
 
 	exit() {
 		if (window.DEBUG) {
-			return LEVELS[3];
+			return LEVELS[1];
 			
 		} else {
 			const v = prompt("Level? [0, 1, 2 or 3]");
