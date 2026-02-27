@@ -1875,7 +1875,6 @@ class Game extends GameState {
         lpos.move(getDirectionDelta(rotateDirectionToLeft(dir)), cmap);
         hasLeft = lpos.getRoad() & 7;
       }
-      console.log(hasLeft, hasRight);
       if (hasRight && !hasLeft) {
         pos.setRoad(roadtypes.types.TURN | roadtypes.TurnDirection.LEFT << 3 | rotateDirectionToLeft(dir) << 6);
       } else if (!hasRight && hasLeft) {
@@ -2187,7 +2186,13 @@ class LevelsState extends GameState {
   draw(args) {
   }
   exit() {
-    return LEVELS[3];
+    if (window.DEBUG) {
+      return LEVELS[3];
+    } else {
+      const v = prompt("Level? [0, 1, 2 or 3]");
+      if (v !== null)
+        return LEVELS[+v];
+    }
   }
   getCamera() {
     return null;
