@@ -1,8 +1,24 @@
 import { GameState, states } from "./states";
 import {GAME_WIDTH, GAME_HEIGHT} from "./dimensions";
+import { PauseElement } from "./PauseElement";
 import {InputHandler} from "./InputHandler";
-import { Game } from "../game/Game";
 import { ImageLoader } from "./ImageLoader";
+import { LevelsState } from "../states/LevelsState";
+
+function setElementAsBackground(
+	element: HTMLCanvasElement | HTMLImageElement,
+	div: HTMLElement
+): void {
+	if (element instanceof HTMLCanvasElement) {
+		element.toBlob(blob => {
+			if (!blob) return;
+			const url = URL.createObjectURL(blob);
+			div.style.backgroundImage = `url(${url})`;
+		});
+	} else {
+		div.style.backgroundImage = `url(${element.src})`;
+	}
+}
 
 export class GameHandler {
 	private state: GameState;
@@ -17,9 +33,36 @@ export class GameHandler {
 		this.inputHandler = new InputHandler(keyboardMode);
 		this.inputHandler.startListeners(eventTarget);
 
-		this.state = new Game();
+		this.state = new LevelsState();
 		this.state.enter(undefined, this.inputHandler);
 
+		// Load panels
+		this.imgLoader.load({
+			resume: "assets/resume.png",
+			pause: "assets/pause.png",
+			restart: "assets/restart.png",
+		}).then(() => {
+			const pauseElement = document.getElementById("pause")! as PauseElement;
+			setElementAsBackground(this.imgLoader.get('resume'), pauseElement);
+
+			pauseElement.togglePause = pause => {
+				if (pause) {
+					pauseElement.classList.add("inPause");
+					setElementAsBackground(this.imgLoader.get('pause'), pauseElement);
+				} else {
+					pauseElement.classList.remove("inPause");
+					setElementAsBackground(this.imgLoader.get('resume'), pauseElement);
+				}
+			};
+
+			setElementAsBackground(
+				this.imgLoader.get('restart'),
+				document.getElementById("restart")!
+			);
+			
+		});
+
+		// Load game assets
 		this.imgLoader.load({
 			turn_all: "assets/turn/all.png",
 			turn_turn: "assets/turn/turn.png",
@@ -30,7 +73,19 @@ export class GameHandler {
 			light_red: "assets/lights/red.png",
 			light_orange: "assets/lights/orange.png",
 			light_green: "assets/lights/green.png",
-		});
+		})
+
+		
+
+		this.imgLoader.loadWithColors(
+			"#ac3232",
+			["#ac3232", "#fbf236", "#5b6ee1", "#5fcde4", "#6abe30", "#d77bba"],
+			{
+				consumer: "assets/consumer.png",
+				spawner: "assets/spawner.png",
+				car: 'assets/car.png'
+			}
+		);
 	}
 	
 

@@ -3,80 +3,11 @@ import { CAR_LINE, CAR_SIZE } from "./CAR_SIZE";
 import { Chunk } from "./Chunk";
 import { ChunkMap } from "./ChunkMap";
 import { Direction, getCellDist, getDirectionDelta, opposeDirection, rotateDirectionToLeft, rotateDirectionToRight } from "./Direction";
+import { GridExplorer } from "./GridExplorer";
 import { modulo } from "./modulo";
 import { roadtypes } from "./roadtypes";
 
-class Position {
-	x: number;
-	y: number;
-	cx: number;
-	cy: number;
-	chunk: Chunk;
 
-	constructor(x: number, y: number, cmap: ChunkMap);
-	constructor(other: Position);
-
-	constructor(
-		a: number | Position,
-		b?: number,
-		cmap?: ChunkMap
-	) {
-		if (a instanceof Position) {
-			this.x = a.x;
-			this.y = a.y;
-			this.cx = a.cx;
-			this.cy = a.cy;
-			this.chunk = a.chunk;
-			return;
-		}
-
-		if (typeof a === "number" && b !== undefined && cmap) {
-			const initX = Math.floor(a / Chunk.SIZE);
-			const initY = Math.floor(b / Chunk.SIZE);
-
-			this.x = modulo(Math.floor(a), Chunk.SIZE);
-			this.y = modulo(Math.floor(b), Chunk.SIZE);
-			this.cx = initX;
-			this.cy = initY;
-			this.chunk = cmap.getChunk(initX, initY);
-			return;
-		}
-
-		throw new TypeError("Invalid constructor parameters");
-	}
-
-
-
-	move(d: {x: number, y: number}, cmap: ChunkMap) {
-		this.x += d.x;
-		this.y += d.y;
-
-		// Update chunk
-		if (this.x >= Chunk.SIZE) {
-			this.x -= Chunk.SIZE;
-			this.cx++;
-			this.chunk = cmap.getChunk(this.cx, this.cy);
-		}
-		
-		if (this.y >= Chunk.SIZE) {
-			this.y -= Chunk.SIZE;
-			this.cy++;
-			this.chunk = cmap.getChunk(this.cx, this.cy);
-		}
-
-		if (this.x < 0) {
-			this.x += Chunk.SIZE;
-			this.cx--;
-			this.chunk = cmap.getChunk(this.cx, this.cy);
-		}
-
-		if (this.y < 0) {
-			this.y += Chunk.SIZE;
-			this.cy--;
-			this.chunk = cmap.getChunk(this.cx, this.cy);
-		}
-	}
-}
 
 
 
@@ -113,7 +44,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 
 
 	
-	const pos = new Position(car.x, car.y, cmap);
+	const pos = new GridExplorer(car.x, car.y, cmap);
 
 	let fastPrioritySpeed = 0;
 	let fastPriorityAcceleration = Infinity;
@@ -122,7 +53,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 
 	// Check cars in front
 	for (let dist = 0; dist < range; dist++) {
-		const road = pos.chunk.getRoad(Math.floor(pos.x), Math.floor(pos.y));
+		const road = pos.getRoad();
 
 		let finish = false;
 		let checkLeft = false;
@@ -207,7 +138,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 
 			// Check left and right cars cutting the road
 			if (realMove < SIZE_LIM) {
-				const leftPos = new Position(pos);
+				const leftPos = new GridExplorer(pos);
 				leftPos.move(ld, cmap);
 				const leftCar = pos.chunk.getCar(leftPos.x, leftPos.y);
 	
@@ -219,7 +150,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 					}
 				}
 	
-				const rightPos = new Position(pos);
+				const rightPos = new GridExplorer(pos);
 				rightPos.move(rd, cmap);
 				const rightCar = pos.chunk.getCar(rightPos.x, rightPos.y);
 	
@@ -255,12 +186,12 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 			turnDir: {x: number, y: number},
 			opDir: Direction,
 		) => {
-			const check = new Position(pos);
+			const check = new GridExplorer(pos);
 
 			for (let checkDist = 1; checkDist < range; checkDist++) {
 				check.move(turnDir, cmap);
 
-				const road = check.chunk.getRoad(check.x, check.y);
+				const road = check.getRoad();
 
 				let shouldBreak = false;
 				switch ((road & 0x7) as roadtypes.types) {

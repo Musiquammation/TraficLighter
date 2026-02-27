@@ -7,6 +7,7 @@ import { roadtypes } from "./roadtypes";
 import { CAR_LINE, CAR_SIZE } from "./CAR_SIZE";
 import { modulo } from "./modulo";
 import { getDanger } from "./getDanger";
+import { ImageLoader } from "../handler/ImageLoader";
 
 
 const RENDER_DISTANCE = 16;
@@ -32,6 +33,7 @@ const colors = [
 	"#FF1744"
 ];
 
+
 export class Car {
 	direction: Direction;
 	acceleration = .001;
@@ -46,7 +48,6 @@ export class Car {
 	alive = true;
 	
 	id = nextCarId++;
-	spawnerId: number;
 	
 	x: number;
 	y: number;
@@ -67,7 +68,6 @@ export class Car {
 		this.lastBlockX = Math.floor(x);
 		this.lastBlockY = Math.floor(y);
 
-		this.spawnerId = spawnerId;
 		this.direction = direction;
 		this.color = color;
 		this.score = score;
@@ -75,7 +75,7 @@ export class Car {
 
 
 
-	draw(ctx: CanvasRenderingContext2D, road: roadtypes.road_t) {
+	draw(ctx: CanvasRenderingContext2D, road: roadtypes.road_t, iloader: ImageLoader) {
 		ctx.fillStyle = colors[modulo(this.id, colors.length)];
 		
 
@@ -97,7 +97,9 @@ export class Car {
 				const m = getAttach(this.direction, this.rotatingToRight, this.rotationStep);
 				x = Math.floor(this.x) + m.x;
 				y = Math.floor(this.y) + m.y;
-				angle = m.angle - Math.PI/2; 
+
+
+				angle = Math.PI/2 * (this.direction + (this.rotatingToRight?-1:1) * this.rotationStep);
 
 			} else {
 				x = this.x;
@@ -116,24 +118,21 @@ export class Car {
 
 		ctx.save();
 		ctx.translate(x, y);
-		ctx.rotate(angle);
+		ctx.rotate(-angle);
 
-		ctx.fillRect(-CAR_SIZE / 2, -CAR_LINE / 2, CAR_SIZE, CAR_LINE);
+		ctx.imageSmoothingEnabled = false;
+		ctx.drawImage(iloader.get('car', this.color),
+			-CAR_SIZE/2, -CAR_LINE/2, CAR_SIZE, CAR_LINE);
 
 		ctx.fillStyle = "black";
 		ctx.font = "1px consolas";
-		ctx.fillText(
-			modulo(this.id, 10).toString(),
-			-CAR_SIZE / 2,
-			CAR_SIZE / 2
-		);
 
 		ctx.restore();
 	}
 
-	behave(road: roadtypes.road_t, game: Game) {
+	behave(road: roadtypes.road_t, game: Game): 'alive' | 'won' | 'killed' {
 		let speedTarget = this.speedLimit;
-		let kill = false;
+		let alive: 'alive' | 'won' | 'killed' = 'alive';
 
 		const px = Math.floor(this.x);
 		const py = Math.floor(this.y);
@@ -144,6 +143,9 @@ export class Car {
 
 			switch (road & 0x7) {
 			case roadtypes.types.VOID:
+				alive = 'killed';
+				break;
+
 			case roadtypes.types.ROAD:
 			case roadtypes.types.PRIORITY:
 			case roadtypes.types.SPAWNER:
@@ -172,21 +174,21 @@ export class Car {
 					break;
 
 				case roadtypes.TurnDirection.FRONT_RIGHT:
-					if (this.spawnerId % 2) {
+					if (this.color % 2) {
 						this.rotatingToRight = true;
 						this.rotationStep = 0;
 					}
 					break;
 
 				case roadtypes.TurnDirection.FRONT_LEFT:
-					if (this.spawnerId % 2) {
+					if (this.color % 2) {
 						this.rotatingToRight = false;
 						this.rotationStep = 0;
 					}
 					break;
 
 				case roadtypes.TurnDirection.LEFT_AND_RIGHT:
-					if (this.spawnerId % 2) {
+					if (this.color % 2) {
 						this.rotatingToRight = true;
 						this.rotationStep = 0;
 					} else {
@@ -197,18 +199,18 @@ export class Car {
 					break;
 
 				case roadtypes.TurnDirection.ALL:
-					switch (this.spawnerId % 3) {
+					switch (this.color % 3) {
 					case 0:
+						break;
+
+					case 1:
 						this.rotatingToRight = true;
 						this.rotationStep = 0;
 						break;
 
-					case 1:
+					case 2:
 						this.rotatingToRight = false;
 						this.rotationStep = 0;
-						break;
-
-					case 2:
 						break;
 					}
 					break;
@@ -228,7 +230,7 @@ export class Car {
 			{
 				const color = road >> 3;
 				if (this.color === color) {
-					kill = true;
+					alive = 'won';
 				}
 				break;
 			}
@@ -244,7 +246,7 @@ export class Car {
 		switch (road & 0x7) {
 		case roadtypes.types.VOID:
 		{
-			speedTarget = 0;
+			alive = 'killed';
 			break;
 		}
 
@@ -302,7 +304,7 @@ export class Car {
 		this.nextSpeed = speed;
 
 
-		return kill;
+		return alive;
 	}
 	
 	move(road: roadtypes.road_t) {

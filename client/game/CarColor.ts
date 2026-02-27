@@ -1,8 +1,8 @@
 export enum CarColor {
-    RED,
-    BLUE,
-    GREEN,
-    YELLOW,
-    PURPLE,
-    CYAN,
+	RED,
+	YELLOW,
+	BLUE,
+	CYAN,
+	GREEN,
+	PURPLE,
 }

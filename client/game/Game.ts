@@ -7,7 +7,7 @@ import { Car } from "./Car";
 import { Chunk } from "./Chunk";
 import { ChunkMap } from "./ChunkMap";
 import { roadtypes } from "./roadtypes";
-import { Direction } from "./Direction";
+import { Direction, getDirectionDelta, rotateDirectionToLeft, rotateDirectionToRight } from "./Direction";
 import { InputHandler } from "../handler/InputHandler";
 import { ImageLoader } from "../handler/ImageLoader";
 import { CarColor } from "./CarColor";
@@ -15,62 +15,103 @@ import { PathGraph } from "./PathGraph";
 import { modulo } from "./modulo";
 import { lightSizeEditor } from "./LightSizeEditor";
 import { TransitionState } from "../states/TransitionState";
+import { MapConstructor } from "./MapConstructor";
+import { PauseElement } from "../handler/PauseElement";
+import { GridExplorer } from "./GridExplorer";
 
 
 const timeLeftDiv = document.getElementById("timeLeft")!;
 const scoreDiv = document.getElementById("score")!;
 
 export class Game extends GameState {
-	private camera: Vector3 = {x: 8, y: 38, z: 80};
+	private camera: Vector3 = {x: 0, y: 0, z: 20};
 
 	chunkMap = new ChunkMap();
 	private graph = new PathGraph(this.chunkMap);
 	private carFrame = 0;
 	private runningCars = false;
 	private score = 0;
-	
-	private test() {
-		const y = 33;
-		
-		for (let i = 0; i < 50; i++) {
-			this.chunkMap.setRoad(i, y+3, roadtypes.types.ROAD);
 
-			for (let j = 0; j < 7; j++) {
-				this.chunkMap.setRoad(5 + 3*j, y+i, roadtypes.types.ROAD);
-			}
+
+	private placeRoad(x: number, y: number) {
+		const cmap = this.chunkMap;
+
+		const neighbors = [
+			cmap.getRoad(x+1, y),
+			cmap.getRoad(x, y-1),
+			cmap.getRoad(x-1, y),
+			cmap.getRoad(x, y+1)
+		];
+
+		const alive: Direction[] = [];
+		for (let i = 0; i < 4; i++)
+			if (neighbors[i] & 0x7)
+				alive.push(i);
+
+
+		if (alive.length === 0) {
+			cmap.setRoad(x, y, roadtypes.types.ROAD);
+			return;
 		}
 
-		this.chunkMap.setRoad(50, y+3, roadtypes.types.CONSUMER);
-		this.chunkMap.setRoad(14, y, roadtypes.types.CONSUMER);
-		// this.chunkMap.setRoad(11, y+3, roadtypes.types.TURN | (2<<3));
+		if (alive.length === 1) {
+			const dir = alive[0];
+			if ((neighbors[dir] & 0x7) != roadtypes.types.ROAD) {
+				cmap.setRoad(x, y, roadtypes.types.ROAD);
+				return;
+			}
 
-		const chunk = this.chunkMap.getChunk(0, 0);
-		chunk.appendCarSpawner({
-			x: 1,
-			y: y+3,
-			color: CarColor.RED,
-			rythm: 	50,
-			couldown: 1,
-			direction: Direction.RIGHT,
-			count: Infinity,
-			currentId: 0,
-			score: 1
-		});
+			let road = roadtypes.types.ROAD;
 
-		chunk.appendCarSpawner({
-			x: 14,
-			y: y+8,
-			color: CarColor.RED,
-			rythm: 70,
-			couldown: 0,
-			direction: Direction.UP,
-			count: Infinity,
-			currentId: 0,
-			score: 3
-		});
+			const mdir = getDirectionDelta(dir);
+			const pos = new GridExplorer(x, y, cmap);
+			pos.move(mdir, cmap);
+			
+			let hasRight;
+			let hasLeft;
+			
+			// Check for turn
+			{
+				const rpos = new GridExplorer(pos);
+				rpos.move(getDirectionDelta(rotateDirectionToRight(dir)), cmap);
+				hasRight = rpos.getRoad() & 0x7;
+	
+				const lpos = new GridExplorer(pos);
+				lpos.move(getDirectionDelta(rotateDirectionToLeft(dir)), cmap);
+				hasLeft = lpos.getRoad() & 0x7;
+			}
 
-		// this.chunkMap.time = 80*60;
-		this.chunkMap.time = 3*60;
+			console.log(hasLeft, hasRight);
+
+			if (hasRight && !hasLeft) {
+				pos.setRoad(roadtypes.types.TURN |
+					(roadtypes.TurnDirection.LEFT  << 3) |
+					(rotateDirectionToLeft(dir) << 6));
+
+
+			} else if (!hasRight && hasLeft) {
+				pos.setRoad(roadtypes.types.TURN |
+					(roadtypes.TurnDirection.RIGHT  << 3) |
+					(rotateDirectionToRight(dir) << 6));
+
+			}
+
+
+			cmap.setRoad(x, y, road);
+			return;
+		}
+
+		if (alive.length === 2) {
+			cmap.setRoad(x, y, roadtypes.types.ROAD);
+			return;
+		}
+
+		cmap.setRoad(x, y, roadtypes.types.ROAD);
+	}
+
+	
+	private test() {
+
 	}
 
 
@@ -102,21 +143,40 @@ export class Game extends GameState {
 
 	}
 
+	private restart() {
+		this.score = 0;
+		this.carFrame = 0;
+		this.runningCars = false;
+		this.chunkMap.reset();
+
+		(document.getElementById("pause") as PauseElement|null)?.togglePause(false);
+	}
 
 	private handleHTML() {
 		document.getElementById("gameView")?.classList.remove("hidden");
 
-		const pause = document.getElementById("pause");
+		const pause = document.getElementById("pause") as PauseElement;
 		if (pause) {
 			pause.classList.add("inPause");
 			pause.onclick = () => {
-				pause.classList.toggle("inPause");
 				this.runningCars = !this.runningCars;
+				pause.togglePause(this.runningCars);
 			}
+		}
+
+		const restart = document.getElementById("restart");
+		if (restart) {
+			restart.onclick = () => {
+				this.restart();
+			};
 		}
 	}
 
 	enter(data: any, input: InputHandler): void {
+		const mapConstructor = data as MapConstructor;
+		mapConstructor.fill(this.chunkMap);
+		mapConstructor.setCamera(this.camera);
+
 		this.test();
 
 		this.handleHTML();
@@ -143,13 +203,14 @@ export class Game extends GameState {
 				if (e.shiftKey) {
 					this.chunkMap.setRoad(x, y, roadtypes.types.VOID);
 				} else {
-					this.chunkMap.setRoad(x, y, roadtypes.types.ROAD);
+					this.placeRoad(x, y);
 				}
 			}
 
 			if (rightDown) {
 				this.chunkMap.setRoad(x, y,
 					roadtypes.onRightClick(this.chunkMap.getRoad(x, y)));
+
 			}
 		};
 		
@@ -173,7 +234,7 @@ export class Game extends GameState {
 				if (e.shiftKey) {
 					this.chunkMap.setRoad(x, y, roadtypes.types.VOID);
 				} else {
-					this.chunkMap.setRoad(x, y, roadtypes.types.ROAD);
+					this.placeRoad(x, y);
 				}
 			}
 
@@ -238,9 +299,15 @@ export class Game extends GameState {
 			const x = modulo(Math.floor(car.x), Chunk.SIZE);
 			const y = modulo(Math.floor(car.y), Chunk.SIZE);
 			const road = chunk.getRoad(x, y);
-			if (car.behave(road, this)) {
-				car.alive = false;
+			switch (car.behave(road, this)) {
+			case "alive":
+				break;
+
+			case "won":
 				this.score += car.score;
+			case "killed":
+				car.alive = false;
+				break;
 			}
 		}
 
@@ -281,9 +348,9 @@ export class Game extends GameState {
 		}
 	}
 
-	private drawCars(ctx: CanvasRenderingContext2D) {
+	private drawCars(ctx: CanvasRenderingContext2D, iloader: ImageLoader) {
 		for (let [_, chunk] of this.chunkMap) {
-			chunk.drawCars(ctx);
+			chunk.drawCars(ctx, iloader);
 		}
 	}
 
@@ -303,10 +370,16 @@ export class Game extends GameState {
 	}
 
 	draw(args: DrawStateData): void {
+		{
+			// Background
+			args.ctx.fillStyle = "#261f19";
+			args.ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+		}
 		// Draw game
 		args.followCamera();
 		this.drawGrid(args.ctx, args.imageLoader);
-		this.drawCars(args.ctx);
+		this.drawCars(args.ctx, args.imageLoader);
 		args.unfollowCamera();
 
 

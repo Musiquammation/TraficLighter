@@ -14,7 +14,7 @@ function produceChunkKey(x: number, y: number) {
 export class ChunkMap {
 	static getPoint(x: number, y: number) {
 		const cx = Math.floor(x / Chunk.SIZE);
-		const cy = Math.floor(x / Chunk.SIZE);
+		const cy = Math.floor(y / Chunk.SIZE);
 		const rx = modulo(Math.floor(x), Chunk.SIZE);
 		const ry = modulo(Math.floor(y), Chunk.SIZE);
 
@@ -23,6 +23,9 @@ export class ChunkMap {
 
 	private chunks = new Map<number, Chunk>();
 	time = 0;
+
+
+
 
 
 	getChunk(x: number, y: number) {
@@ -126,6 +129,13 @@ export class ChunkMap {
 
 			const chunk = this.getChunk(cx, cy);
 			chunk.appendCar(car, x, y);
+		}
+	}
+
+
+	reset() {
+		for (let [_, chunk] of this.chunks) {
+			chunk.reset();
 		}
 	}
 	

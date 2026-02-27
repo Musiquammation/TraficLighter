@@ -1,4 +1,5 @@
 import { ImageLoader } from "../handler/ImageLoader";
+import { CarColor } from "./CarColor";
 import { ChunkMap } from "./ChunkMap";
 import {Direction} from "./Direction"
 import { lightSizeEditor, LightSizeEditor } from "./LightSizeEditor";
@@ -43,12 +44,13 @@ export namespace roadtypes {
 
 
 		/**
-		 * No data
+		 * [+3,+4,+5]: color
+		 * [+6,+7]: direction
 		 */
 		SPAWNER,
 
 		/**
-		 * [+3,+4,+5,+6,+7]: color
+		 * [+3,+4,+5]: color
 		 */
 		CONSUMER,
 	}
@@ -85,13 +87,13 @@ export namespace roadtypes {
 
 	
 	export function draw(ctx: CanvasRenderingContext2D, iloader: ImageLoader, road: road_t) {
-		function drawImage(name: string, angle: number, flip = {x: false, y: false}) {
+		function drawImage(name: string, angle: number, flip = {x: false, y: false, color: -1}) {
 			ctx.save();
 			ctx.translate(0.5, 0.5);
 			ctx.rotate(-angle);
 			ctx.scale(flip.x ? -1 : 1, flip.y ? -1 : 1);
 			ctx.imageSmoothingEnabled = false;
-			ctx.drawImage(iloader.get(name), -0.5, -0.5, 1, 1);
+			ctx.drawImage(iloader.get(name, flip.color), -0.5, -0.5, 1, 1);
 			ctx.restore();
 		}
 
@@ -128,7 +130,7 @@ export namespace roadtypes {
 				break;
 
 			case TurnDirection.LEFT:
-				drawImage('turn_turn', direction, {x: false, y: true});
+				drawImage('turn_turn', direction, {x: false, y: true, color: -1});
 				break;
 				
 			case TurnDirection.FRONT_RIGHT:
@@ -136,7 +138,7 @@ export namespace roadtypes {
 				break;
 
 			case TurnDirection.FRONT_LEFT:
-				drawImage('turn_select', direction, {x: false, y: true});
+				drawImage('turn_select', direction, {x: false, y: true, color: -1});
 				break;				
 				
 			case TurnDirection.LEFT_AND_RIGHT:
@@ -171,13 +173,16 @@ export namespace roadtypes {
 
 		case types.SPAWNER:
 		{
-			drawImage('', 0);
+			const color: CarColor = (road >> 3) & 0x7;
+			const direction: Direction = (road >> 6) & 0x3;
+			drawImage('spawner', direction * Math.PI/2, {x: false, y: false, color: color});
 			break;
 		}
 
 		case types.CONSUMER:
 		{
-			drawImage('', 0);
+			const color: CarColor = (road >> 3) & 0x7;
+			drawImage('consumer', 0, {x: false, y: false, color: color});
 			break;
 		}
 

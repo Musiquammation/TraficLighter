@@ -10,8 +10,10 @@ interface CarSpawner {
 	y: number;
 	color: CarColor;
 	rythm: number;
+	startCouldown: number;
 	couldown: number;
 	direction: Direction;
+	startCount: number;
 	count: number;
 	currentId: number;
 	score: number;
@@ -23,7 +25,7 @@ interface Light {
 };
 
 export class Chunk {
-	static SIZE = 64;
+	static SIZE = 16;
 
 	static getIdx(x: number, y: number) {
 		return y * Chunk.SIZE + x;
@@ -92,17 +94,12 @@ export class Chunk {
 		ctx.fillRect(0, 0, Chunk.SIZE, Chunk.SIZE);
 
 		// Draw roads
-		const paddingX = this.x * Chunk.SIZE;
-		const paddingY = this.y * Chunk.SIZE;
 		for (let y = 0; y < Chunk.SIZE; y++) {
-			const realY = paddingY + y;
-			
 			for (let x = 0; x < Chunk.SIZE; x++) {
 				const obj = this.getRoad(x, y);
 				if (obj === 0)
 					continue;
 				
-				const realX = paddingX + x;
 				ctx.save();
 				ctx.translate(x, y);
 				roadtypes.draw(ctx, iloader, obj);
@@ -112,13 +109,13 @@ export class Chunk {
 		}
 	}
 
-	drawCars(ctx: CanvasRenderingContext2D) {
+	drawCars(ctx: CanvasRenderingContext2D, iloader: ImageLoader) {
 		for (const car of this.iterateCars()) {
 			const x = modulo(Math.floor(car.x), Chunk.SIZE);
 			const y = modulo(Math.floor(car.y), Chunk.SIZE);
 
 			const road = this.getRoad(x, y);
-			car.draw(ctx, road);
+			car.draw(ctx, road, iloader);
 		}
 	}
 
@@ -183,9 +180,16 @@ export class Chunk {
 
 
 	appendCarSpawner(spawner: CarSpawner) {
-		this.carSpawners.set(Chunk.getIdx(spawner.x, spawner.y), spawner);
-		const road = roadtypes.types.SPAWNER;
-		this.setRoad(spawner.x, spawner.y, road);
+		const x = modulo(spawner.x, Chunk.SIZE);
+		const y = modulo(spawner.y, Chunk.SIZE);
+		
+		this.carSpawners.set(Chunk.getIdx(x, y), spawner);
+		const road = roadtypes.types.SPAWNER |
+			((spawner.color & 0x7) << 3) |
+			(spawner.direction << 6);
+
+			
+		this.setRoad(x, y, road);
 	}
 
 	private appendLight(light: Light, x: number, y: number) {
@@ -282,5 +286,21 @@ export class Chunk {
 
 	getLight(x: number, y: number) {
 		return this.lights.get(Chunk.getIdx(x, y));
+	}
+
+
+	reset() {
+		this.nextCarSlot = 0;
+
+		for (let i = 0; i < this.cars.length; i++) {
+			this.cars[i].length = 0;
+		}
+
+		this.carGrid.fill(255);
+
+		for (const spawner of this.carSpawners.values()) {
+			spawner.couldown = spawner.startCouldown;
+			spawner.count = spawner.startCount;
+		}
 	}
 }
