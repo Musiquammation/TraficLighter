@@ -9,6 +9,11 @@ import { DrawStateData, GameState } from "../handler/states";
 import { Vector3 } from "../handler/Vector3";
 
 
+declare global {
+	interface Window {
+		DEBUG: boolean;
+	}
+}
 
 export class LevelsState extends GameState {
 	constructor() {
@@ -28,11 +33,16 @@ export class LevelsState extends GameState {
 	}
 
 	exit() {
-		return LEVELS[3];
+		if (window.DEBUG) {
+			return LEVELS[3];
+			
+		} else {
+			const v = prompt("Level? [0, 1, 2 or 3]");
+			if (v !== null)
+				return LEVELS[+v];
 
-		/*const v = prompt("Level");
-		if (v !== null)
-			return LEVELS[+v];*/
+		}
+
 	}
 
 	getCamera(): Vector3 | null {
