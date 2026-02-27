@@ -5,6 +5,12 @@ import {InputHandler} from "./InputHandler";
 import { ImageLoader } from "./ImageLoader";
 import { LevelsState } from "../states/LevelsState";
 
+declare global {
+	interface Window {
+		IMG_ROOT_PATH: string;
+	}
+}
+
 function setElementAsBackground(
 	element: HTMLCanvasElement | HTMLImageElement,
 	div: HTMLElement
@@ -24,7 +30,7 @@ export class GameHandler {
 	private state: GameState;
 
 	inputHandler: InputHandler;
-	imgLoader = new ImageLoader("");
+	imgLoader = new ImageLoader(window.IMG_ROOT_PATH);
 
 	constructor(
 		keyboardMode: "zqsd" | "wasd",
