@@ -2594,7 +2594,7 @@ function setElementAsBackground(element, div) {
 }
 class GameHandler {
   constructor(keyboardMode, eventTarget) {
-    this.imgLoader = new ImageLoader("");
+    this.imgLoader = new ImageLoader(window.IMG_ROOT_PATH);
     this.inputHandler = new InputHandler(keyboardMode);
     this.inputHandler.startListeners(eventTarget);
     this.state = new LevelsState();
