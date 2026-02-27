@@ -81,7 +81,6 @@ export class Game extends GameState {
 				hasLeft = lpos.getRoad() & 0x7;
 			}
 
-			console.log(hasLeft, hasRight);
 
 			if (hasRight && !hasLeft) {
 				pos.setRoad(roadtypes.types.TURN |
