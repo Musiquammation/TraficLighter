@@ -2759,7 +2759,7 @@ function startGame() {
       if (window.useRequestAnimationFrame) {
         requestAnimationFrame(runGameLoop);
       } else {
-        setTimeout(runGameLoop, 1e3 / 3);
+        setTimeout(runGameLoop, 1e3 / 60);
       }
     }
     countedFps++;
