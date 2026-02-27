@@ -1389,8 +1389,8 @@ const _Chunk = class _Chunk {
     }
   }
   appendCarSpawner(spawner) {
-    const x = modulo(spawner.x, _Chunk.SIZE);
-    const y = modulo(spawner.y, _Chunk.SIZE);
+    const x = spawner.x;
+    const y = spawner.y;
     this.carSpawners.set(_Chunk.getIdx(x, y), spawner);
     const road = roadtypes.types.SPAWNER | (spawner.color & 7) << 3 | spawner.direction << 6;
     this.setRoad(x, y, road);
@@ -2124,8 +2124,8 @@ class MapConstructor {
         Math.floor(spawner.y / Chunk.SIZE)
       );
       chunk.appendCarSpawner({
-        x: spawner.x,
-        y: spawner.y,
+        x: modulo(spawner.x, Chunk.SIZE),
+        y: modulo(spawner.y, Chunk.SIZE),
         color: spawner.color,
         rythm: spawner.rythm,
         startCouldown: spawner.couldown,
@@ -2136,6 +2136,7 @@ class MapConstructor {
         score: spawner.score,
         currentId: i
       });
+      console.log(spawner);
     }
     for (const road of this.roads) {
       cmap.setRoad(road.x, road.y, road.data);
@@ -2187,7 +2188,7 @@ class LevelsState extends GameState {
   }
   exit() {
     if (window.DEBUG) {
-      return LEVELS[3];
+      return LEVELS[1];
     } else {
       const v = prompt("Level? [0, 1, 2 or 3]");
       if (v !== null)
