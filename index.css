@@ -12,9 +12,6 @@ canvas {
 }
 
 
-.hidden {
-	display: none;
-}
 
 #fps {
 	display: block;
@@ -26,5 +23,65 @@ canvas {
 	font-family: 'Courier New', Courier, monospace;
 }
 
+#timeLeft {
+	display: block;
+	position: absolute;
+	left: 10px;
+	top: 10px;
+	color: white;
+	background-color: #000a;
+	font-size: 3vmin;
+	font-family:'Courier New', Courier, monospace;
+}
+
+#score {
+	display: block;
+	position: absolute;
+	right: 10px;
+	top: 10px;
+	color: white;
+	background-color: #000a;
+	font-size: 3vmin;
+	font-family:'Courier New', Courier, monospace;
+}
+
+#pause {
+	display: block;
+	position: absolute;
+	left: 10px;
+	top: calc(3vmin + 20px);
+	width: 10vmin;
+	height: 10vmin;
+	background-color: green;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	image-rendering: pixelated;
+	image-rendering: crisp-edges; /* fallback */
+}
+
+#restart {
+	display: block;
+	position: absolute;
+	left: calc(20px + 10vmin);
+	top: calc(3vmin + 20px);
+	width: 10vmin;
+	height: 10vmin;
+	background-color: green;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	image-rendering: pixelated;
+	image-rendering: crisp-edges; /* fallback */
+}
+
+#pause.inPause {
+	background-color: red;
+}
 
 
+
+
+.hidden {
+	display: none;
+}
