@@ -10,11 +10,7 @@ import { roadtypes } from "./roadtypes";
 
 
 
-function getCarsDist(dir: Direction, car: Car, over: Car) {
-	if (car.rotationStep < 0) {
-
-	}
-
+function getCarsDist(dir: Direction, over: Car) {
 	if (over.rotationStep < 0) {
 		
 	}
@@ -126,25 +122,34 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 
 	let list = [];
 
+	let willCheckPriorities = false;
+
 	// Check cars in front
 	for (let dist = 0; dist < range; dist++) {
 		const road = pos.getRoad();
 		list.push(`${pos.x};${pos.y}`);
 
 		let finish = false;
-		let checkLeft = false;
-		let checkRight = false;
+		let checkLeft = willCheckPriorities;
+		let checkRight = willCheckPriorities;
+		willCheckPriorities = false;
+
+
 		switch ((road & 0x7) as roadtypes.types) {
 		case roadtypes.types.VOID:
 			finish = true;
 			break;
 
 		case roadtypes.types.ROAD:
-			if (dist > 0)
-				checkRight = true;
+			if (dist > 0) {checkRight = true;}
 			break;
 
 		case roadtypes.types.TURN:
+			if (((road >> 6) & 0x3) !== dir.dir) {
+				if (dist > 0) {checkRight = true;}
+				break;
+			}
+
 			switch (((road >> 3) & 0x7) as roadtypes.TurnDirection) {
 			case roadtypes.TurnDirection.RIGHT:
 				dir.turnRight();
@@ -190,23 +195,31 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 			if ((road >> 6) !== car.direction)
 				break;
 
-			checkRight = true;
-			checkLeft = true;
+			if (dist > 0) {
+				checkRight = true;
+				checkLeft = true;
+			}
+			willCheckPriorities = true;
 			break;
 
 		case roadtypes.types.SPAWNER:
-			checkRight = true;
+			if (dist > 0) {checkRight = true;}
 			break;
 			
 		case roadtypes.types.CONSUMER:
-			checkRight = true;
 			break;
 
 		case roadtypes.types.LIGHT:
-			if ((road >> 6) === car.direction && (road & (1<<3)) === 0)
+			if (dist > 0) {checkRight = true;}
+
+			if (
+				(road >> 6) === car.direction
+				&& (road & (1<<3)) === 0
+				&& (dist > 0 || dir.realMove >= 1 - CAR_SIZE/2)
+			) {
 				finish = true;
+			}
 			
-			checkRight = true;
 			break;
 
 		}
@@ -227,7 +240,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 			}
 
 			if (over !== 'empty') {
-				const carsDist = getCarsDist(dir.dir, car, over);
+				const carsDist = getCarsDist(dir.dir, over);
 				if (car.id === -1) {
 					console.log(
 						dir.dir + " " +

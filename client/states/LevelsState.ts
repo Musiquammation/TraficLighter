@@ -34,7 +34,7 @@ export class LevelsState extends GameState {
 
 	exit() {
 		if (window.DEBUG) {
-			return LEVELS[0];
+			return LEVELS[4];
 			
 		} else {
 			const v = prompt("Level? [1, 2, 3 or 4]");
@@ -74,7 +74,7 @@ const LEVELS: MapConstructor[] = [
 				x: 20,
 				y: 10,
 				color: CarColor.YELLOW,
-				rythm: 	180,
+				rythm: 	45,
 				couldown: 1,
 				direction: Direction.DOWN,
 				count: Infinity,
