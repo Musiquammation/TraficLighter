@@ -23,6 +23,16 @@ canvas {
 	font-family: 'Courier New', Courier, monospace;
 }
 
+#mousePos {
+	display: block;
+	position: absolute;
+	right: 0px;
+	bottom: 0px;
+	color: green;
+	background-color: #000a;
+	font-family: 'Courier New', Courier, monospace;
+}
+
 #timeLeft {
 	display: block;
 	position: absolute;

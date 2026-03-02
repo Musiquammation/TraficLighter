@@ -351,7 +351,7 @@ class ImageLoader {
     }
     await Promise.all(promises);
   }
-  async loadWithColors(checked, colors2, list) {
+  async loadWithColors(checked, colors, list) {
     this.totalCount += Object.keys(list).length;
     const promises = [];
     for (const [name, path] of Object.entries(list)) {
@@ -370,7 +370,7 @@ class ImageLoader {
             this.folders["colored"] = {};
           if (!this.folders["colored"][name])
             this.folders["colored"][name] = [];
-          for (const color of colors2) {
+          for (const color of colors) {
             const recolored = this.recolorImage(img, checked, color);
             this.folders["colored"][name].push(recolored);
           }
@@ -408,9 +408,11 @@ var CarColor = /* @__PURE__ */ ((CarColor2) => {
   CarColor2[CarColor2["RED"] = 0] = "RED";
   CarColor2[CarColor2["YELLOW"] = 1] = "YELLOW";
   CarColor2[CarColor2["BLUE"] = 2] = "BLUE";
-  CarColor2[CarColor2["CYAN"] = 3] = "CYAN";
-  CarColor2[CarColor2["GREEN"] = 4] = "GREEN";
-  CarColor2[CarColor2["PURPLE"] = 5] = "PURPLE";
+  CarColor2[CarColor2["GREEN"] = 3] = "GREEN";
+  CarColor2[CarColor2["CYAN"] = 4] = "CYAN";
+  CarColor2[CarColor2["PINK"] = 5] = "PINK";
+  CarColor2[CarColor2["WHITE"] = 6] = "WHITE";
+  CarColor2[CarColor2["GRAY"] = 7] = "GRAY";
   return CarColor2;
 })(CarColor || {});
 function modulo(a, n) {
@@ -601,16 +603,14 @@ var roadtypes;
     types2[types2["CONSUMER"] = 6] = "CONSUMER";
   })(roadtypes2.types || (roadtypes2.types = {}));
   ((TurnDirection2) => {
-    TurnDirection2[TurnDirection2["FRONT"] = 0] = "FRONT";
-    TurnDirection2[TurnDirection2["RIGHT"] = 1] = "RIGHT";
-    TurnDirection2[TurnDirection2["LEFT"] = 2] = "LEFT";
-    TurnDirection2[TurnDirection2["FRONT_RIGHT"] = 3] = "FRONT_RIGHT";
-    TurnDirection2[TurnDirection2["FRONT_LEFT"] = 4] = "FRONT_LEFT";
-    TurnDirection2[TurnDirection2["LEFT_AND_RIGHT"] = 5] = "LEFT_AND_RIGHT";
-    TurnDirection2[TurnDirection2["ALL"] = 6] = "ALL";
-    TurnDirection2[TurnDirection2["BACK"] = 7] = "BACK";
-    TurnDirection2[TurnDirection2["LENGTH"] = 8] = "LENGTH";
+    TurnDirection2[TurnDirection2["RIGHT"] = 0] = "RIGHT";
+    TurnDirection2[TurnDirection2["LEFT"] = 1] = "LEFT";
+    TurnDirection2[TurnDirection2["FRONT_RIGHT"] = 2] = "FRONT_RIGHT";
+    TurnDirection2[TurnDirection2["FRONT_LEFT"] = 3] = "FRONT_LEFT";
+    TurnDirection2[TurnDirection2["LEFT_AND_RIGHT"] = 4] = "LEFT_AND_RIGHT";
+    TurnDirection2[TurnDirection2["ALL"] = 5] = "ALL";
   })(roadtypes2.TurnDirection || (roadtypes2.TurnDirection = {}));
+  const TURN_DIRECTION_LENGTH = 6;
   function generateExtraData(road) {
     switch (road & 7) {
       case 0:
@@ -652,28 +652,22 @@ var roadtypes;
         const direction = Math.PI / 2 * (road >> 6 & 3);
         switch (type) {
           case 0:
-            drawImage("turn_front", direction);
-            break;
-          case 1:
             drawImage("turn_turn", direction);
             break;
-          case 2:
+          case 1:
             drawImage("turn_turn", direction, { x: false, y: true, color: -1 });
             break;
-          case 3:
+          case 2:
             drawImage("turn_select", direction);
             break;
-          case 4:
+          case 3:
             drawImage("turn_select", direction, { x: false, y: true, color: -1 });
             break;
-          case 5:
+          case 4:
             drawImage("turn_full", direction);
             break;
-          case 6:
+          case 5:
             drawImage("turn_all", direction);
-            break;
-          case 7:
-            drawImage("", direction);
             break;
         }
         return;
@@ -734,11 +728,11 @@ var roadtypes;
         if (delta > 0) {
           type--;
           if (type < 0) {
-            type = 8 - 1;
+            type = TURN_DIRECTION_LENGTH - 1;
           }
         } else {
           type++;
-          if (type >= 8) {
+          if (type >= TURN_DIRECTION_LENGTH) {
             type = 0;
           }
         }
@@ -808,7 +802,65 @@ class GridExplorer {
     return this.chunk.setRoad(this.x, this.y, road);
   }
 }
+function getCarsDist(dir, over) {
+  if (over.rotationStep < 0) ;
+  switch (dir) {
+    case Direction.RIGHT:
+      return Math.max(0, CAR_SIZE / 2 - modulo(over.x, 1));
+    case Direction.UP:
+      return Math.max(0, modulo(over.y, 1) + CAR_SIZE / 2 - 1);
+    case Direction.LEFT:
+      return Math.max(0, modulo(over.x, 1) + CAR_SIZE / 2 - 1);
+    case Direction.DOWN:
+      return Math.max(0, CAR_SIZE / 2 - modulo(over.y, 1));
+  }
+}
 const SIZE_LIM = (3 - CAR_SIZE - CAR_LINE) / 2;
+class DirHelper {
+  constructor(a) {
+    if (a instanceof Car) {
+      this.dir = a.direction;
+      this.realMove = a.getCellDist();
+      this.d = getDirectionDelta(this.dir);
+      this.rdir = rotateDirectionToRight(this.dir);
+      this.ldir = rotateDirectionToLeft(this.dir);
+      this.rd = getDirectionDelta(this.rdir);
+      this.ld = getDirectionDelta(this.ldir);
+      this.rop = opposeDirection(this.rdir);
+      this.lop = opposeDirection(this.ldir);
+    } else {
+      this.realMove = a.realMove;
+      this.dir = a.dir;
+      this.d = a.d;
+      this.rdir = a.rdir;
+      this.ldir = a.ldir;
+      this.rd = a.rd;
+      this.ld = a.ld;
+      this.rop = a.rop;
+      this.lop = a.lop;
+    }
+  }
+  turnRight() {
+    this.dir = rotateDirectionToRight(this.dir);
+    this.d = getDirectionDelta(this.dir);
+    this.rdir = rotateDirectionToRight(this.dir);
+    this.ldir = rotateDirectionToLeft(this.dir);
+    this.rd = getDirectionDelta(this.rdir);
+    this.ld = getDirectionDelta(this.ldir);
+    this.rop = opposeDirection(this.rdir);
+    this.lop = opposeDirection(this.ldir);
+  }
+  turnLeft() {
+    this.dir = rotateDirectionToLeft(this.dir);
+    this.d = getDirectionDelta(this.dir);
+    this.rdir = rotateDirectionToRight(this.dir);
+    this.ldir = rotateDirectionToLeft(this.dir);
+    this.rd = getDirectionDelta(this.rdir);
+    this.ld = getDirectionDelta(this.ldir);
+    this.rop = opposeDirection(this.rdir);
+    this.lop = opposeDirection(this.ldir);
+  }
+}
 function getDanger(car, range, cmap) {
   let finalSpeed = Infinity;
   const CAR_PASSAGE_LENGTH = 1 + CAR_SIZE;
@@ -818,115 +870,145 @@ function getDanger(car, range, cmap) {
       finalSpeed = lim;
   }
   function limDist(dist) {
-    let d2 = car.deceleration * dist;
-    if (d2 >= 0)
-      d2 = Math.sqrt(d2);
-    limSpeed(d2);
+    let d = car.deceleration * dist;
+    if (d >= 0)
+      d = Math.sqrt(d);
+    limSpeed(d);
   }
-  let realMove = getCellDist(car.direction, car.x, car.y);
-  let d = getDirectionDelta(car.direction);
-  let rdir = rotateDirectionToRight(car.direction);
-  let ldir = rotateDirectionToLeft(car.direction);
-  let rd = getDirectionDelta(rdir);
-  let ld = getDirectionDelta(ldir);
-  let rop = opposeDirection(rdir);
-  let lop = opposeDirection(ldir);
+  const dir = new DirHelper(car);
   const pos = new GridExplorer(car.x, car.y, cmap);
   let fastPrioritySpeed = 0;
   let fastPriorityAcceleration = Infinity;
   let slowPrioritySpeed = Infinity;
+  let willCheckPriorities = false;
   for (let dist = 0; dist < range; dist++) {
     const road = pos.getRoad();
+    const checkDir = new DirHelper(dir);
     let finish = false;
-    let checkLeft = false;
-    let checkRight = false;
+    let checkLeft = willCheckPriorities;
+    let checkRight = willCheckPriorities;
+    willCheckPriorities = false;
     switch (road & 7) {
       case roadtypes.types.VOID:
         finish = true;
         break;
       case roadtypes.types.ROAD:
-        if (dist > 0)
+        if (dist > 0) {
           checkRight = true;
+        }
         break;
       case roadtypes.types.TURN:
+        if ((road >> 6 & 3) !== dir.dir) {
+          if (dist > 0) {
+            checkRight = true;
+          }
+          break;
+        }
+        if (dist > 0) {
+          checkRight = true;
+        }
+        switch (road >> 3 & 7) {
+          case roadtypes.TurnDirection.RIGHT:
+            dir.turnRight();
+            break;
+          case roadtypes.TurnDirection.LEFT:
+            dir.turnLeft();
+            break;
+          case roadtypes.TurnDirection.FRONT_RIGHT:
+            if (car.color % 2)
+              dir.turnRight();
+            break;
+          case roadtypes.TurnDirection.FRONT_LEFT:
+            if (car.color % 2)
+              dir.turnLeft();
+            break;
+          case roadtypes.TurnDirection.LEFT_AND_RIGHT:
+            if (car.color % 2)
+              dir.turnLeft();
+            break;
+          case roadtypes.TurnDirection.ALL:
+            switch (car.color % 3) {
+              case 0:
+                break;
+              case 1:
+                dir.turnRight();
+                break;
+              case 2:
+                dir.turnLeft();
+                break;
+            }
+            break;
+        }
         break;
       case roadtypes.types.PRIORITY:
         if (road >> 6 !== car.direction)
           break;
-        checkRight = true;
-        checkLeft = true;
+        if (dist > 0) {
+          checkRight = true;
+          checkLeft = true;
+        }
+        willCheckPriorities = true;
         break;
       case roadtypes.types.SPAWNER:
-        checkRight = true;
+        if (dist > 0) {
+          checkRight = true;
+        }
         break;
       case roadtypes.types.CONSUMER:
-        checkRight = true;
         break;
       case roadtypes.types.LIGHT:
-        if (road >> 6 === car.direction && (road & 1 << 3) === 0)
+        if (dist > 0) {
+          checkRight = true;
+        }
+        if (road >> 6 === car.direction && (road & 1 << 3) === 0 && (dist > 0 || dir.realMove >= 1 - CAR_SIZE / 2)) {
           finish = true;
-        checkRight = true;
+        }
         break;
     }
     if (finish) {
-      limDist(dist - CAR_SIZE / 2 - realMove);
+      limDist(dist - CAR_SIZE / 2 - dir.realMove);
       break;
     }
     let willBreak = false;
     if (dist > 0) {
       const over = pos.chunk.getCar(pos.x, pos.y);
       if (over === "full") {
-        limDist(dist - CAR_SIZE / 2 - realMove);
+        limDist(dist - CAR_SIZE / 2 - dir.realMove);
         break;
       }
       if (over !== "empty") {
-        let carsDist;
-        switch (car.direction) {
-          case Direction.RIGHT:
-            carsDist = Math.min(Math.floor(over.x), over.x - CAR_SIZE / 2) - car.x;
-            break;
-          case Direction.UP:
-            carsDist = car.y - Math.max(Math.floor(over.y + 1), over.y + CAR_SIZE / 2);
-            break;
-          case Direction.LEFT:
-            carsDist = car.x - Math.max(Math.floor(over.x + 1), over.x + CAR_SIZE / 2);
-            break;
-          case Direction.DOWN:
-            carsDist = Math.min(Math.floor(over.y), over.y - CAR_SIZE / 2) - car.y;
-            break;
-        }
-        carsDist -= CAR_SIZE / 2;
-        limDist(carsDist);
+        const carsDist = getCarsDist(dir.dir, over);
+        limDist(dist - carsDist - dir.realMove - CAR_SIZE / 2);
         willBreak = true;
       }
-      if (realMove < SIZE_LIM) {
+      if (dir.realMove < SIZE_LIM) {
         const leftPos = new GridExplorer(pos);
-        leftPos.move(ld, cmap);
+        leftPos.move(dir.ld, cmap);
         const leftCar = pos.chunk.getCar(leftPos.x, leftPos.y);
-        if (leftCar instanceof Car && leftCar.direction === rdir) {
+        if (leftCar instanceof Car && leftCar.direction === dir.rdir) {
           const subDist = getCellDist(leftCar.direction, leftCar.x, leftCar.y);
           if (subDist > SIZE_LIM) {
-            limDist(dist - CAR_LINE / 2 - realMove);
+            limDist(dist - CAR_LINE / 2 - dir.realMove);
           }
         }
         const rightPos = new GridExplorer(pos);
-        rightPos.move(rd, cmap);
+        rightPos.move(dir.rd, cmap);
         const rightCar = pos.chunk.getCar(rightPos.x, rightPos.y);
-        if (rightCar instanceof Car && rightCar.direction === ldir) {
+        if (rightCar instanceof Car && rightCar.direction === dir.ldir) {
           const subDist = getCellDist(rightCar.direction, rightCar.x, rightCar.y);
           if (subDist > SIZE_LIM) {
-            limDist(dist - CAR_LINE / 2 - realMove);
+            limDist(dist - CAR_LINE / 2 - dir.realMove);
           }
         }
       }
     }
     if (willBreak)
       break;
-    if (realMove >= SIZE_LIM || !checkRight && !checkLeft) {
-      pos.move(d, cmap);
+    if (dir.realMove >= SIZE_LIM || !checkRight && !checkLeft) {
+      pos.move(dir.d, cmap);
       continue;
     }
-    let entryDist = dist - realMove - CAR_SIZE / 2;
+    let entryDist = dist - dir.realMove - CAR_SIZE / 2;
     let exitDist = entryDist + CAR_PASSAGE_LENGTH;
     if (entryDist < 0) {
       entryDist = 0;
@@ -935,6 +1017,7 @@ function getDanger(car, range, cmap) {
       }
     }
     const runCheck = (turnDir, opDir) => {
+      let forbiddenCarsFlag = 0;
       const check = new GridExplorer(pos);
       for (let checkDist = 1; checkDist < range; checkDist++) {
         check.move(turnDir, cmap);
@@ -945,12 +1028,33 @@ function getDanger(car, range, cmap) {
             shouldBreak = true;
             break;
           case roadtypes.types.ROAD:
+            break;
           case roadtypes.types.TURN:
+            if ((road2 >> 6 & 3) !== opDir) {
+              break;
+            }
+            switch (road2 >> 3 & 7) {
+              case roadtypes.TurnDirection.RIGHT:
+              case roadtypes.TurnDirection.LEFT:
+                shouldBreak = true;
+                break;
+              case roadtypes.TurnDirection.FRONT_RIGHT:
+              case roadtypes.TurnDirection.FRONT_LEFT:
+                forbiddenCarsFlag |= 170;
+                break;
+              case roadtypes.TurnDirection.LEFT_AND_RIGHT:
+                shouldBreak = true;
+                break;
+              case roadtypes.TurnDirection.ALL:
+                forbiddenCarsFlag |= 182;
+                break;
+            }
+            break;
           case roadtypes.types.SPAWNER:
           case roadtypes.types.CONSUMER:
             break;
           case roadtypes.types.PRIORITY:
-            if (road2 >> 6 == opDir) {
+            if (road2 >> 6 === opDir) {
               shouldBreak = true;
             }
             break;
@@ -965,9 +1069,9 @@ function getDanger(car, range, cmap) {
         const over = check.chunk.getCar(check.x, check.y);
         if (over === "full" || over === "empty")
           continue;
-        if (over.direction !== opDir)
+        if (over.direction !== opDir || forbiddenCarsFlag & 1 << over.color)
           continue;
-        const over_realMove = getCellDist(over.direction, over.x, over.y);
+        const over_realMove = over.getCellDist();
         let over_entryDist = checkDist - over_realMove - CAR_SIZE / 2;
         let over_exitDist = over_entryDist + CAR_PASSAGE_LENGTH;
         if (over_entryDist < 0) {
@@ -988,12 +1092,12 @@ function getDanger(car, range, cmap) {
       }
     };
     if (checkRight) {
-      runCheck(rd, rop);
+      runCheck(checkDir.rd, checkDir.rop);
     }
     if (checkLeft) {
-      runCheck(ld, lop);
+      runCheck(checkDir.ld, checkDir.lop);
     }
-    pos.move(d, cmap);
+    pos.move(dir.d, cmap);
   }
   return {
     lim: finalSpeed,
@@ -1002,30 +1106,12 @@ function getDanger(car, range, cmap) {
     slow: slowPrioritySpeed
   };
 }
-const RENDER_DISTANCE = 16;
+const RENDER_DISTANCE = 32;
 let nextCarId = 0;
-const colors = [
-  "#FF0000",
-  "#FF3D00",
-  "#FF6D00",
-  "#FF9100",
-  "#FFD600",
-  "#AEEA00",
-  "#00E676",
-  "#00FF00",
-  "#00F0FF",
-  "#00B0FF",
-  "#2979FF",
-  "#3D5AFE",
-  "#651FFF",
-  "#D500F9",
-  "#FF00FF",
-  "#FF1744"
-];
 class Car {
   constructor(x, y, spawnerId, direction, color, score) {
-    this.acceleration = 1e-3;
-    this.deceleration = 3e-3;
+    this.acceleration = 3e-3;
+    this.deceleration = 8e-3;
     this.speedLimit = 0.2;
     this.speed = this.speedLimit;
     this.nextSpeed = this.speedLimit;
@@ -1042,8 +1128,12 @@ class Car {
     this.color = color;
     this.score = score;
   }
+  getCellDist() {
+    if (this.rotationStep >= 0)
+      return Math.min(this.rotationStep, 1);
+    return getCellDist(this.direction, this.x, this.y);
+  }
   draw(ctx, road, iloader) {
-    ctx.fillStyle = colors[modulo(this.id, colors.length)];
     let x;
     let y;
     let angle;
@@ -1108,8 +1198,6 @@ class Car {
             break;
           const type = road >> 3 & 7;
           switch (type) {
-            case roadtypes.TurnDirection.FRONT:
-              break;
             case roadtypes.TurnDirection.RIGHT:
               this.rotatingToRight = true;
               this.rotationStep = 0;
@@ -1153,10 +1241,6 @@ class Car {
                   break;
               }
               break;
-            case roadtypes.TurnDirection.BACK:
-              break;
-            case roadtypes.TurnDirection.LENGTH:
-              break;
           }
           break;
         }
@@ -1171,32 +1255,21 @@ class Car {
       this.lastBlockX = px;
       this.lastBlockY = py;
     }
-    switch (road & 7) {
-      case roadtypes.types.VOID: {
-        alive = "killed";
-        break;
+    if ((road & 7) === roadtypes.types.VOID) {
+      alive = "killed";
+    } else {
+      const speed2 = getDanger(this, RENDER_DISTANCE, game.chunkMap);
+      if (speed2.lim < speedTarget) {
+        speedTarget = speed2.lim;
       }
-      case roadtypes.types.ROAD:
-      case roadtypes.types.PRIORITY:
-      case roadtypes.types.SPAWNER:
-      case roadtypes.types.CONSUMER: {
-        const speed2 = getDanger(this, RENDER_DISTANCE, game.chunkMap);
-        if (speed2.lim < speedTarget) {
-          speedTarget = speed2.lim;
-        }
-        if ((speed2.fast > speedTarget || speed2.acceleration > this.acceleration) && speed2.slow < speedTarget) {
-          speedTarget = speed2.slow;
-        }
-        if (speedTarget < 0)
-          speedTarget = 0;
-        break;
+      if ((speed2.fast > speedTarget || speed2.acceleration > this.acceleration) && speed2.slow < speedTarget) {
+        speedTarget = speed2.slow;
       }
-      case roadtypes.types.TURN: {
-        break;
+      if (this.id === 0 && window.stopFirst) {
+        speedTarget = 0;
       }
-      case roadtypes.types.LIGHT: {
-        break;
-      }
+      if (speedTarget < 0)
+        speedTarget = 0;
     }
     let speed = this.speed;
     if (speed < speedTarget) {
@@ -1269,6 +1342,7 @@ class Car {
           this.x = Math.floor(this.x) + dx;
           this.y = Math.floor(this.y) + dy;
           this.direction = nextDir;
+          this.rotationStep = -1;
         }
         return;
       }
@@ -1829,6 +1903,7 @@ class TransitionState extends GameState {
 }
 const timeLeftDiv = document.getElementById("timeLeft");
 const scoreDiv = document.getElementById("score");
+const mousePosDiv = document.getElementById("mousePos");
 class Game extends GameState {
   constructor() {
     super(...arguments);
@@ -1890,6 +1965,8 @@ class Game extends GameState {
     cmap.setRoad(x, y, roadtypes.types.ROAD);
   }
   test() {
+    if (!window.DEBUG)
+      return;
   }
   getMousePosition(mouseX, mouseY) {
     const scaleX = innerWidth / GAME_WIDTH;
@@ -1941,10 +2018,14 @@ class Game extends GameState {
     this.handleHTML();
     let lastX = 0;
     let lastY = 0;
+    function updateMouse(x, y) {
+      mousePosDiv.innerText = `(${x.toFixed(1)},${y.toFixed(1)})`;
+    }
     input.onMouseUp = (e) => {
       const { x, y } = this.getMousePosition(e.clientX, e.clientY);
       lastX = x;
       lastY = y;
+      updateMouse(x, y);
     };
     input.onMouseDown = (e) => {
       const { x, y } = this.getMousePosition(e.clientX, e.clientY);
@@ -1967,6 +2048,7 @@ class Game extends GameState {
           roadtypes.onRightClick(this.chunkMap.getRoad(x, y))
         );
       }
+      updateMouse(x, y);
     };
     input.onMouseMove = (e) => {
       let { x, y } = this.getMousePosition(e.clientX, e.clientY);
@@ -1989,6 +2071,7 @@ class Game extends GameState {
       }
       lastX = x;
       lastY = y;
+      updateMouse(x, y);
     };
     input.onScroll = (e) => {
       let { x, y } = this.getMousePosition(e.clientX, e.clientY);
@@ -2022,6 +2105,7 @@ class Game extends GameState {
       } else if (!leftDown && !rightDown) {
         this.camera.z -= this.camera.z * e.deltaY / 1e3;
       }
+      updateMouse(x, y);
     };
   }
   runCars() {
@@ -2136,7 +2220,6 @@ class MapConstructor {
         score: spawner.score,
         currentId: i
       });
-      console.log(spawner);
     }
     for (const road of this.roads) {
       cmap.setRoad(road.x, road.y, road.data);
@@ -2188,9 +2271,9 @@ class LevelsState extends GameState {
   }
   exit() {
     if (window.DEBUG) {
-      return LEVELS[1];
+      return LEVELS[0];
     } else {
-      const v = prompt("Level? [0, 1, 2 or 3]");
+      const v = prompt("Level? [1, 2, 3 or 4]");
       if (v !== null)
         return LEVELS[+v];
     }
@@ -2202,13 +2285,13 @@ class LevelsState extends GameState {
 const LEVELS = [
   // Level 0
   new MapConstructor({
-    time: 100 * 60,
+    time: 599.9 * 60,
     width: 31,
     height: 31,
     spawners: [
       {
-        x: 1,
-        y: 5,
+        x: 11,
+        y: 14,
         color: CarColor.RED,
         rythm: 45,
         couldown: 1,
@@ -2217,41 +2300,26 @@ const LEVELS = [
         score: 1
       },
       {
-        x: 1,
-        y: 10,
-        color: CarColor.BLUE,
+        x: 11,
+        y: 12,
+        color: CarColor.YELLOW,
         rythm: 45,
         couldown: 1,
         direction: Direction.RIGHT,
         count: Infinity,
         score: 1
-      },
-      {
-        x: 20,
-        y: 30,
-        color: CarColor.GREEN,
-        rythm: 135,
-        couldown: 1,
-        direction: Direction.UP,
-        count: Infinity,
-        score: 10
       }
     ],
     roads: [
       {
-        x: 30,
-        y: 5,
+        x: 13,
+        y: 7,
         data: roadtypes.types.CONSUMER | CarColor.RED << 3
       },
       {
-        x: 20,
-        y: 1,
-        data: roadtypes.types.CONSUMER | CarColor.GREEN << 3
-      },
-      {
-        x: 30,
-        y: 10,
-        data: roadtypes.types.CONSUMER | CarColor.BLUE << 3
+        x: 13,
+        y: 6,
+        data: roadtypes.types.CONSUMER | CarColor.YELLOW << 3
       }
     ]
   }),
@@ -2296,6 +2364,61 @@ const LEVELS = [
       {
         x: 30,
         y: 5,
+        data: roadtypes.types.CONSUMER | CarColor.RED << 3
+      },
+      {
+        x: 20,
+        y: 1,
+        data: roadtypes.types.CONSUMER | CarColor.GREEN << 3
+      },
+      {
+        x: 30,
+        y: 10,
+        data: roadtypes.types.CONSUMER | CarColor.BLUE << 3
+      }
+    ]
+  }),
+  // Level 2
+  new MapConstructor({
+    time: 100 * 60,
+    width: 31,
+    height: 31,
+    spawners: [
+      {
+        x: 1,
+        y: 5,
+        color: CarColor.RED,
+        rythm: 45,
+        couldown: 1,
+        direction: Direction.RIGHT,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 1,
+        y: 10,
+        color: CarColor.BLUE,
+        rythm: 45,
+        couldown: 1,
+        direction: Direction.RIGHT,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 20,
+        y: 30,
+        color: CarColor.GREEN,
+        rythm: 135,
+        couldown: 1,
+        direction: Direction.UP,
+        count: Infinity,
+        score: 10
+      }
+    ],
+    roads: [
+      {
+        x: 30,
+        y: 5,
         data: roadtypes.types.CONSUMER | CarColor.BLUE << 3
       },
       {
@@ -2310,7 +2433,7 @@ const LEVELS = [
       }
     ]
   }),
-  // Level 2
+  // Level 3
   new MapConstructor({
     time: 100 * 60,
     width: 31,
@@ -2415,7 +2538,7 @@ const LEVELS = [
       }
     ]
   }),
-  // Level 3
+  // Level 4
   new MapConstructor({
     time: 100 * 60,
     width: 32,
@@ -2504,7 +2627,7 @@ const LEVELS = [
       {
         x: 31,
         y: 16,
-        color: CarColor.PURPLE,
+        color: CarColor.PINK,
         rythm: 360,
         couldown: 1,
         direction: Direction.LEFT,
@@ -2514,7 +2637,7 @@ const LEVELS = [
       {
         x: 31,
         y: 15,
-        color: CarColor.PURPLE,
+        color: CarColor.PINK,
         rythm: 360,
         couldown: 180,
         direction: Direction.LEFT,
@@ -2583,7 +2706,7 @@ const LEVELS = [
       { x: 28, y: 9, data: roadtypes.types.CONSUMER | CarColor.YELLOW << 3 },
       { x: 28, y: 23, data: roadtypes.types.CONSUMER | CarColor.BLUE << 3 },
       { x: 28, y: 30, data: roadtypes.types.CONSUMER | CarColor.CYAN << 3 },
-      { x: 1, y: 17, data: roadtypes.types.CONSUMER | CarColor.PURPLE << 3 }
+      { x: 1, y: 17, data: roadtypes.types.CONSUMER | CarColor.PINK << 3 }
     ]
   })
 ];
@@ -2639,7 +2762,16 @@ class GameHandler {
     });
     this.imgLoader.loadWithColors(
       "#ac3232",
-      ["#ac3232", "#fbf236", "#5b6ee1", "#5fcde4", "#6abe30", "#d77bba"],
+      [
+        "#ac3232",
+        "#fbf236",
+        "#5b6ee1",
+        "#5fcde4",
+        "#6abe30",
+        "#d77bba",
+        "#f0f8ed",
+        "#6e6e6e"
+      ],
       {
         consumer: "assets/consumer.png",
         spawner: "assets/spawner.png",
@@ -2758,6 +2890,8 @@ function startGame() {
     if (window.running) {
       if (window.useRequestAnimationFrame) {
         requestAnimationFrame(runGameLoop);
+      } else if (window.DEBUG) {
+        setTimeout(runGameLoop, 1e3 / 3);
       } else {
         setTimeout(runGameLoop, 1e3 / 60);
       }
