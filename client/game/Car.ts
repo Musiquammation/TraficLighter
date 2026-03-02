@@ -10,28 +10,10 @@ import { getDanger } from "./getDanger";
 import { ImageLoader } from "../handler/ImageLoader";
 
 
-const RENDER_DISTANCE = 16;
+const RENDER_DISTANCE = 32;
 
 let nextCarId = 0;
 
-const colors = [
-	"#FF0000",
-	"#FF3D00",
-	"#FF6D00",
-	"#FF9100",
-	"#FFD600",
-	"#AEEA00",
-	"#00E676",
-	"#00FF00",
-	"#00F0FF",
-	"#00B0FF",
-	"#2979FF",
-	"#3D5AFE",
-	"#651FFF",
-	"#D500F9",
-	"#FF00FF",
-	"#FF1744"
-];
 
 
 export class Car {
@@ -83,9 +65,6 @@ export class Car {
 	}
 
 	draw(ctx: CanvasRenderingContext2D, road: roadtypes.road_t, iloader: ImageLoader) {
-		ctx.fillStyle = colors[modulo(this.id, colors.length)];
-		
-
 		let x: number;
 		let y: number;
 		let angle: number;

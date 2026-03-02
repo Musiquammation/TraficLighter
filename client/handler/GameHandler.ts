@@ -85,7 +85,16 @@ export class GameHandler {
 
 		this.imgLoader.loadWithColors(
 			"#ac3232",
-			["#ac3232", "#fbf236", "#5b6ee1", "#5fcde4", "#6abe30", "#d77bba"],
+			[
+				"#ac3232",
+				"#fbf236",
+				"#5b6ee1",
+				"#5fcde4",
+				"#6abe30",
+				"#d77bba",
+				"#f0f8ed",
+				"#6e6e6e"
+			],
 			{
 				consumer: "assets/consumer.png",
 				spawner: "assets/spawner.png",

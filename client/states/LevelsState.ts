@@ -34,7 +34,7 @@ export class LevelsState extends GameState {
 
 	exit() {
 		if (window.DEBUG) {
-			return LEVELS[4];
+			return LEVELS[0];
 			
 		} else {
 			const v = prompt("Level? [1, 2, 3 or 4]");
@@ -71,16 +71,30 @@ const LEVELS: MapConstructor[] = [
 			},
 
 			{
-				x: 20,
-				y: 10,
+				x: 11,
+				y: 12,
 				color: CarColor.YELLOW,
 				rythm: 	45,
 				couldown: 1,
-				direction: Direction.DOWN,
+				direction: Direction.RIGHT,
 				count: Infinity,
 				score: 1
 			},
 
+		],
+
+		roads: [
+			{
+				x: 13,
+				y: 7,
+				data: roadtypes.types.CONSUMER | (CarColor.RED << 3)
+			},
+
+			{
+				x: 13,
+				y: 6,
+				data: roadtypes.types.CONSUMER | (CarColor.YELLOW << 3)
+			}
 		]
 	}),
 
@@ -421,7 +435,7 @@ const LEVELS: MapConstructor[] = [
 			{
 				x: 31,
 				y: 16,
-				color: CarColor.PURPLE,
+				color: CarColor.PINK,
 				rythm: 	360,
 				couldown: 1,
 				direction: Direction.LEFT,
@@ -432,7 +446,7 @@ const LEVELS: MapConstructor[] = [
 			{
 				x: 31,
 				y: 15,
-				color: CarColor.PURPLE,
+				color: CarColor.PINK,
 				rythm: 	360,
 				couldown: 180,
 				direction: Direction.LEFT,
@@ -467,7 +481,7 @@ const LEVELS: MapConstructor[] = [
 			{x: 28, y: 9, data: roadtypes.types.CONSUMER | (CarColor.YELLOW << 3)},
 			{x: 28, y: 23, data: roadtypes.types.CONSUMER | (CarColor.BLUE << 3)},
 			{x: 28, y: 30, data: roadtypes.types.CONSUMER | (CarColor.CYAN << 3)},
-			{x: 1, y: 17, data: roadtypes.types.CONSUMER | (CarColor.PURPLE << 3)},
+			{x: 1, y: 17, data: roadtypes.types.CONSUMER | (CarColor.PINK << 3)},
 		]
 	}),
 ];
