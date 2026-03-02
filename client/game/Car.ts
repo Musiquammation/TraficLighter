@@ -1,7 +1,7 @@
 import { Vector2 } from "../handler/Vector2";
 import { CarColor } from "./CarColor";
 import { ChunkMap } from "./ChunkMap";
-import { Direction, getAttach, rotateDirectionToLeft, rotateDirectionToRight } from "./Direction";
+import { Direction, getAttach, getCellDist, rotateDirectionToLeft, rotateDirectionToRight } from "./Direction";
 import { Game } from "./Game";
 import { roadtypes } from "./roadtypes";
 import { CAR_LINE, CAR_SIZE } from "./CAR_SIZE";
@@ -36,9 +36,9 @@ const colors = [
 
 export class Car {
 	direction: Direction;
-	acceleration = .001;
-	deceleration = .003;
-	speedLimit = .2;
+	acceleration = .003;
+	deceleration = .008;
+	speedLimit = .5;
 	speed = this.speedLimit;
 	nextSpeed = this.speedLimit;
 	rotationStep = -1;
@@ -74,6 +74,13 @@ export class Car {
 	}
 
 
+
+	getCellDist() {
+		if (this.rotationStep >= 0)
+			return Math.min(this.rotationStep, 1);
+
+		return getCellDist(this.direction, this.x, this.y);
+	}
 
 	draw(ctx: CanvasRenderingContext2D, road: roadtypes.road_t, iloader: ImageLoader) {
 		ctx.fillStyle = colors[modulo(this.id, colors.length)];
@@ -160,9 +167,6 @@ export class Car {
 				const type: roadtypes.TurnDirection = (road >> 3) & 0x7;
 
 				switch (type) {
-				case roadtypes.TurnDirection.FRONT:
-					break;
-
 				case roadtypes.TurnDirection.RIGHT:
 					this.rotatingToRight = true;
 					this.rotationStep = 0;
@@ -214,12 +218,6 @@ export class Car {
 						break;
 					}
 					break;
-
-				case roadtypes.TurnDirection.BACK:
-					break;
-
-				case roadtypes.TurnDirection.LENGTH:
-					break;
 				}
 
 				break;
@@ -243,18 +241,9 @@ export class Car {
 
 
 		// Update speed limit
-		switch (road & 0x7) {
-		case roadtypes.types.VOID:
-		{
+		if ((road & 0x7) === roadtypes.types.VOID) {
 			alive = 'killed';
-			break;
-		}
-
-		case roadtypes.types.ROAD:
-		case roadtypes.types.PRIORITY:
-		case roadtypes.types.SPAWNER:
-		case roadtypes.types.CONSUMER:
-		{
+		} else {
 			const speed = getDanger(this, RENDER_DISTANCE, game.chunkMap);
 			if (speed.lim < speedTarget) {
 				speedTarget = speed.lim;
@@ -266,27 +255,16 @@ export class Car {
 				speedTarget = speed.slow;
 			}
 
+
+			if (this.id === 0 && (window as any).stopFirst) {
+				speedTarget = 0;
+			}
+
 			if (speedTarget < 0)
 				speedTarget = 0;
 
 
-			break;
 		}
-
-		case roadtypes.types.TURN:
-		{
-
-			break;
-		}
-
-		case roadtypes.types.LIGHT:
-		{
-
-			break;
-		}
-		
-		}
-		
 
 
 		// Adapt speed to speedTarget
@@ -384,6 +362,7 @@ export class Car {
 				this.x = Math.floor(this.x) + dx;
 				this.y = Math.floor(this.y) + dy;
 				this.direction = nextDir;
+				this.rotationStep = -1;
 			}
 			
 

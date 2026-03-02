@@ -34,10 +34,10 @@ export class LevelsState extends GameState {
 
 	exit() {
 		if (window.DEBUG) {
-			return LEVELS[1];
+			return LEVELS[0];
 			
 		} else {
-			const v = prompt("Level? [0, 1, 2 or 3]");
+			const v = prompt("Level? [1, 2, 3 or 4]");
 			if (v !== null)
 				return LEVELS[+v];
 
@@ -55,13 +55,13 @@ export class LevelsState extends GameState {
 const LEVELS: MapConstructor[] = [
 	// Level 0
 	new MapConstructor({
-		time: 100*60,
+		time: (599.9)*60,
 		width: 31,
 		height: 31,
 		spawners: [
 			{
-				x: 1,
-				y: 5,
+				x: 11,
+				y: 14,
 				color: CarColor.RED,
 				rythm: 	45,
 				couldown: 1,
@@ -71,45 +71,16 @@ const LEVELS: MapConstructor[] = [
 			},
 
 			{
-				x: 1,
+				x: 20,
 				y: 10,
-				color: CarColor.BLUE,
-				rythm: 	45,
+				color: CarColor.YELLOW,
+				rythm: 	180,
 				couldown: 1,
-				direction: Direction.RIGHT,
+				direction: Direction.DOWN,
 				count: Infinity,
 				score: 1
 			},
 
-			{
-				x: 20,
-				y: 30,
-				color: CarColor.GREEN,
-				rythm: 	135,
-				couldown: 1,
-				direction: Direction.UP,
-				count: Infinity,
-				score: 10
-			}
-		],
-		roads: [
-			{
-				x: 30,
-				y: 5,
-				data: roadtypes.types.CONSUMER | (CarColor.RED << 3)
-			},
-
-			{
-				x: 20,
-				y: 1,
-				data: roadtypes.types.CONSUMER | (CarColor.GREEN << 3)
-			},
-
-			{
-				x: 30,
-				y: 10,
-				data: roadtypes.types.CONSUMER | (CarColor.BLUE << 3)
-			}
 		]
 	}),
 
@@ -150,6 +121,66 @@ const LEVELS: MapConstructor[] = [
 				direction: Direction.UP,
 				count: Infinity,
 				score: 10
+			}
+		],
+		roads: [
+			{
+				x: 30,
+				y: 5,
+				data: roadtypes.types.CONSUMER | (CarColor.RED << 3)
+			},
+
+			{
+				x: 20,
+				y: 1,
+				data: roadtypes.types.CONSUMER | (CarColor.GREEN << 3)
+			},
+
+			{
+				x: 30,
+				y: 10,
+				data: roadtypes.types.CONSUMER | (CarColor.BLUE << 3)
+			}
+		]
+	}),
+
+	// Level 2
+	new MapConstructor({
+		time: 100*60,
+		width: 31,
+		height: 31,
+		spawners: [
+			{
+				x: 1,
+				y: 5,
+				color: CarColor.RED,
+				rythm: 	45,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 1,
+				y: 10,
+				color: CarColor.BLUE,
+				rythm: 	45,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 20,
+				y: 30,
+				color: CarColor.GREEN,
+				rythm: 	135,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 10
 			},
 		],
 		roads: [
@@ -173,7 +204,7 @@ const LEVELS: MapConstructor[] = [
 		]
 	}),
 
-	// Level 2
+	// Level 3
 	new MapConstructor({
 		time: 100*60,
 		width: 31,
@@ -292,7 +323,7 @@ const LEVELS: MapConstructor[] = [
 		]
 	}),
 
-	// Level 3
+	// Level 4
 	new MapConstructor({
 		time: 100*60,
 		width: 32,

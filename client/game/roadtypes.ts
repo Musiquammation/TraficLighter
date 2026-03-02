@@ -56,16 +56,16 @@ export namespace roadtypes {
 	}
 
 	export enum TurnDirection {
-		FRONT,
 		RIGHT,
 		LEFT,
 		FRONT_RIGHT,
 		FRONT_LEFT,
 		LEFT_AND_RIGHT,
-		ALL,
-		BACK,
-		LENGTH
+		ALL
 	}
+
+	const TURN_DIRECTION_LENGTH = 6 as const;
+
 
 
 
@@ -121,10 +121,6 @@ export namespace roadtypes {
 			const direction = Math.PI/2 * ((road >> 6) & 0x3);
 
 			switch (type) {
-			case TurnDirection.FRONT:
-				drawImage('turn_front', direction);
-				break;
-
 			case TurnDirection.RIGHT:
 				drawImage('turn_turn', direction);
 				break;
@@ -148,11 +144,6 @@ export namespace roadtypes {
 			case TurnDirection.ALL:
 				drawImage('turn_all', direction);
 				break;
-
-			case TurnDirection.BACK:
-				drawImage('', direction);
-				break;
-
 			}
 
 			return;
@@ -216,6 +207,7 @@ export namespace roadtypes {
 		}
 	}
 
+
 	export function onScroll(road: road_t, delta: number): road_t | 'light' | null {
 		switch (road & 0x7) {
 		case types.VOID:
@@ -228,11 +220,11 @@ export namespace roadtypes {
 			if (delta > 0) {
 				type--;
 				if (type < 0) {
-					type = TurnDirection.LENGTH-1;
+					type = TURN_DIRECTION_LENGTH-1;
 				}
 			} else {
 				type++;
-				if (type >= TurnDirection.LENGTH) {
+				if (type >= TURN_DIRECTION_LENGTH) {
 					type = 0;
 				}
 			}

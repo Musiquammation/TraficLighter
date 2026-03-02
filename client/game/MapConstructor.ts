@@ -62,8 +62,6 @@ export class MapConstructor {
 				score: spawner.score,
 				currentId: i
 			});
-
-			console.log(spawner);
 		}
 
 		for (const road of this.roads) {

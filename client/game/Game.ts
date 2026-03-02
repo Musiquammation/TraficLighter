@@ -22,6 +22,7 @@ import { GridExplorer } from "./GridExplorer";
 
 const timeLeftDiv = document.getElementById("timeLeft")!;
 const scoreDiv = document.getElementById("score")!;
+const mousePosDiv = document.getElementById("mousePos")!;
 
 export class Game extends GameState {
 	private camera: Vector3 = {x: 0, y: 0, z: 20};
@@ -110,6 +111,11 @@ export class Game extends GameState {
 
 	
 	private test() {
+		if (!window.DEBUG)
+			return;
+
+
+		// this.chunkMap.setRoad(x, y, roadtypes.types.ROAD);
 
 	}
 
@@ -183,10 +189,15 @@ export class Game extends GameState {
 		let lastX = 0;
 		let lastY = 0;
 
+		function updateMouse(x: number, y: number) {
+			mousePosDiv.innerText = `(${x.toFixed(1)},${y.toFixed(1)})`;
+		}
+
 		input.onMouseUp = e => {
 			const {x,y} = this.getMousePosition(e.clientX, e.clientY);
 			lastX = x;
 			lastY = y;
+			updateMouse(x, y);
 		};
 		
 		input.onMouseDown = e => {
@@ -211,6 +222,8 @@ export class Game extends GameState {
 					roadtypes.onRightClick(this.chunkMap.getRoad(x, y)));
 
 			}
+
+			updateMouse(x, y);
 		};
 		
 		input.onMouseMove = e => {
@@ -240,6 +253,7 @@ export class Game extends GameState {
 
 			lastX = x;
 			lastY = y;
+			updateMouse(x, y);
 		};
 
 		input.onScroll = e => {
@@ -281,6 +295,8 @@ export class Game extends GameState {
 			} else if (!leftDown && !rightDown) {
 				this.camera.z -= this.camera.z * e.deltaY / 1000;
 			}
+
+			updateMouse(x, y);
 		}
 
 	}

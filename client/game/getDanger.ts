@@ -10,8 +10,87 @@ import { roadtypes } from "./roadtypes";
 
 
 
+function getCarsDist(dir: Direction, car: Car, over: Car) {
+	if (car.rotationStep < 0) {
+
+	}
+
+	if (over.rotationStep < 0) {
+		
+	}
+
+	switch (dir) {
+	case Direction.RIGHT:
+		return Math.max(0, CAR_SIZE/2 - modulo(over.x, 1));
+		
+	case Direction.UP:
+		return Math.max(0, modulo(over.y, 1) + CAR_SIZE/2 - 1);
+		
+	case Direction.LEFT:
+		return Math.max(0, modulo(over.x, 1) + CAR_SIZE/2 - 1);
+
+	case Direction.DOWN:
+		return Math.max(0, CAR_SIZE/2 - modulo(over.y, 1));
+	}
+
+
+}
+
+
 
 const SIZE_LIM = (3 - CAR_SIZE - CAR_LINE) / 2;
+
+
+class DirHelper {
+	realMove: number;
+	dir: Direction;
+	d: {x: number, y: number};
+	rdir: Direction;
+	ldir: Direction;
+	rd: {x: number, y: number};
+	ld: {x: number, y: number};
+	rop: Direction;
+	lop: Direction;
+
+	constructor(car: Car) {
+		this.dir = car.direction;
+		this.realMove = car.getCellDist();
+
+		this.d = getDirectionDelta(this.dir);
+		this.rdir = rotateDirectionToRight(this.dir);
+		this.ldir = rotateDirectionToLeft(this.dir);
+		this.rd = getDirectionDelta(this.rdir);
+		this.ld = getDirectionDelta(this.ldir);
+		this.rop = opposeDirection(this.rdir);
+		this.lop = opposeDirection(this.ldir);
+	}
+
+	turnRight() {
+		this.dir = rotateDirectionToRight(this.dir);
+		
+		this.d = getDirectionDelta(this.dir);
+		this.rdir = rotateDirectionToRight(this.dir);
+		this.ldir = rotateDirectionToLeft(this.dir);
+		this.rd = getDirectionDelta(this.rdir);
+		this.ld = getDirectionDelta(this.ldir);
+		this.rop = opposeDirection(this.rdir);
+		this.lop = opposeDirection(this.ldir);
+	}
+
+	turnLeft() {
+		this.dir = rotateDirectionToLeft(this.dir);
+		
+		this.d = getDirectionDelta(this.dir);
+		this.rdir = rotateDirectionToRight(this.dir);
+		this.ldir = rotateDirectionToLeft(this.dir);
+		this.rd = getDirectionDelta(this.rdir);
+		this.ld = getDirectionDelta(this.ldir);
+		this.rop = opposeDirection(this.rdir);
+		this.lop = opposeDirection(this.ldir);
+	}
+}
+
+	
 
 export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 	let finalSpeed = Infinity;
@@ -33,17 +112,10 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 	}
 
 
-	let realMove = getCellDist(car.direction, car.x, car.y);
-	let d = getDirectionDelta(car.direction);
-	let rdir = rotateDirectionToRight(car.direction);
-	let ldir = rotateDirectionToLeft(car.direction);
-	let rd = getDirectionDelta(rdir);
-	let ld = getDirectionDelta(ldir);
-	let rop = opposeDirection(rdir);
-	let lop = opposeDirection(ldir);
-
-
 	
+
+
+	const dir = new DirHelper(car);
 	const pos = new GridExplorer(car.x, car.y, cmap);
 
 	let fastPrioritySpeed = 0;
@@ -51,9 +123,13 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 	let slowPrioritySpeed = Infinity;
 
 
+
+	let list = [];
+
 	// Check cars in front
 	for (let dist = 0; dist < range; dist++) {
 		const road = pos.getRoad();
+		list.push(`${pos.x};${pos.y}`);
 
 		let finish = false;
 		let checkLeft = false;
@@ -69,6 +145,45 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 			break;
 
 		case roadtypes.types.TURN:
+			switch (((road >> 3) & 0x7) as roadtypes.TurnDirection) {
+			case roadtypes.TurnDirection.RIGHT:
+				dir.turnRight();
+				break;
+
+			case roadtypes.TurnDirection.LEFT:
+				dir.turnLeft();
+				break;
+
+			case roadtypes.TurnDirection.FRONT_RIGHT:
+				if (car.color % 2)
+					dir.turnRight();
+				break;
+
+			case roadtypes.TurnDirection.FRONT_LEFT:
+				if (car.color % 2)
+					dir.turnLeft();
+				break;
+			case roadtypes.TurnDirection.LEFT_AND_RIGHT:
+				if (car.color % 2)
+					dir.turnLeft();
+				break;
+
+			case roadtypes.TurnDirection.ALL:
+				switch (car.color % 3) {
+				case 0:
+					break;
+
+				case 1:
+					dir.turnRight();
+					break;
+
+				case 2:
+					dir.turnLeft();
+					break;
+				}
+				break;
+			
+			}
 			break;
 
 		case roadtypes.types.PRIORITY:
@@ -98,82 +213,78 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 
 
 		if (finish) {
-			limDist(dist - CAR_SIZE/2 - realMove);
+			limDist(dist - CAR_SIZE/2 - dir.realMove);
 			break; // no more road to check
 		}
+
 
 		let willBreak = false;
 		if (dist > 0) {
 			const over = pos.chunk.getCar(pos.x, pos.y);
 			if (over === 'full') {
-				limDist(dist - CAR_SIZE/2 - realMove);
+				limDist(dist - CAR_SIZE/2 - dir.realMove);
 				break;
 			}
 
 			if (over !== 'empty') {
-				let carsDist;
-				switch (car.direction) {
-				case Direction.RIGHT:
-					carsDist = Math.min(Math.floor(over.x), over.x - CAR_SIZE/2) - car.x;
-					break;
-					
-				case Direction.UP:
-					carsDist = car.y - Math.max(Math.floor(over.y+1), over.y + CAR_SIZE/2);
-					break;
-
-				case Direction.LEFT:
-					carsDist = car.x - Math.max(Math.floor(over.x+1), over.x + CAR_SIZE/2);
-					break;
-
-				case Direction.DOWN:
-					carsDist = Math.min(Math.floor(over.y), over.y - CAR_SIZE/2) - car.y;
-					break;
+				const carsDist = getCarsDist(dir.dir, car, over);
+				if (car.id === -1) {
+					console.log(
+						dir.dir + " " +
+						over.y.toFixed(2) + " " +
+						car.rotationStep.toFixed(2) + " " +
+						dist.toFixed(2) + " " +
+						carsDist.toFixed(2) + " " +
+						dir.realMove.toFixed(2) + " => " +
+						(dist - carsDist - dir.realMove - CAR_SIZE/2).toFixed(2)
+					);
 				}
 
-				carsDist -= CAR_SIZE/2;
+				limDist(dist - carsDist - dir.realMove - CAR_SIZE/2);
+
 				
-				limDist(carsDist);
 				willBreak = true;
 			}
 
 			// Check left and right cars cutting the road
-			if (realMove < SIZE_LIM) {
+			if (dir.realMove < SIZE_LIM) {
 				const leftPos = new GridExplorer(pos);
-				leftPos.move(ld, cmap);
+				leftPos.move(dir.ld, cmap);
 				const leftCar = pos.chunk.getCar(leftPos.x, leftPos.y);
 	
 	
-				if (leftCar instanceof Car && leftCar.direction === rdir) {
+				if (leftCar instanceof Car && leftCar.direction === dir.rdir) {
 					const subDist = getCellDist(leftCar.direction, leftCar.x, leftCar.y);
 					if (subDist > SIZE_LIM) {
-						limDist(dist - CAR_LINE/2 - realMove);
+						limDist(dist - CAR_LINE/2 - dir.realMove);
 					}
 				}
 	
 				const rightPos = new GridExplorer(pos);
-				rightPos.move(rd, cmap);
+				rightPos.move(dir.rd, cmap);
 				const rightCar = pos.chunk.getCar(rightPos.x, rightPos.y);
 	
-				if (rightCar instanceof Car && rightCar.direction === ldir) {
+				if (rightCar instanceof Car && rightCar.direction === dir.ldir) {
 					const subDist = getCellDist(rightCar.direction, rightCar.x, rightCar.y);
 					if (subDist > SIZE_LIM) {
-						limDist(dist - CAR_LINE/2 - realMove);
+						limDist(dist - CAR_LINE/2 - dir.realMove);
 					}
 				}
 			}
 		}
+
 
 		if (willBreak)
 			break;
 
 
-		if (realMove >= SIZE_LIM || !checkRight && !checkLeft) {
-			pos.move(d, cmap);
+		if (dir.realMove >= SIZE_LIM || !checkRight && !checkLeft) {
+			pos.move(dir.d, cmap);
 			continue;
 		}
 		
 
-		let entryDist = dist - realMove - CAR_SIZE/2;
+		let entryDist = dist - dir.realMove - CAR_SIZE/2;
 		let exitDist = entryDist + CAR_PASSAGE_LENGTH;
 		if (entryDist < 0) {
 			entryDist = 0;
@@ -228,7 +339,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 				if (over.direction !== opDir)
 					continue;
 
-				const over_realMove = getCellDist(over.direction, over.x, over.y);
+				const over_realMove = over.getCellDist();
 				let over_entryDist = checkDist - over_realMove - CAR_SIZE/2;
 				let over_exitDist = over_entryDist + CAR_PASSAGE_LENGTH;
 				if (over_entryDist < 0) {
@@ -248,6 +359,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 
 				const slowSpeed = entryDist * over.speed / over_exitDist;
 
+
 				if (slowSpeed < slowPrioritySpeed)
 					slowPrioritySpeed = slowSpeed;
 
@@ -258,16 +370,15 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 
 
 		if (checkRight) {
-			runCheck(rd, rop);
+			runCheck(dir.rd, dir.rop);
 		}
 
 		if (checkLeft) {
-			runCheck(ld, lop);
+			runCheck(dir.ld, dir.lop);
 		}
 
-		pos.move(d, cmap);
+		pos.move(dir.d, cmap);
 	}
-
 
 
 
