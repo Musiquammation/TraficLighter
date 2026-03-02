@@ -380,7 +380,7 @@ const LEVELS: MapConstructor[] = [
 			{
 				x: 1,
 				y: 11,
-				color: CarColor.CYAN,
+				color: CarColor.GREEN,
 				rythm: 	60,
 				couldown: 1,
 				direction: Direction.RIGHT,
@@ -424,7 +424,7 @@ const LEVELS: MapConstructor[] = [
 			{
 				x: 1,
 				y: 27,
-				color: CarColor.CYAN,
+				color: CarColor.GREEN,
 				rythm: 	60,
 				couldown: 1,
 				direction: Direction.RIGHT,
@@ -480,7 +480,7 @@ const LEVELS: MapConstructor[] = [
 			{x: 28, y: 2, data: roadtypes.types.CONSUMER | (CarColor.RED << 3)},
 			{x: 28, y: 9, data: roadtypes.types.CONSUMER | (CarColor.YELLOW << 3)},
 			{x: 28, y: 23, data: roadtypes.types.CONSUMER | (CarColor.BLUE << 3)},
-			{x: 28, y: 30, data: roadtypes.types.CONSUMER | (CarColor.CYAN << 3)},
+			{x: 28, y: 30, data: roadtypes.types.CONSUMER | (CarColor.GREEN << 3)},
 			{x: 1, y: 17, data: roadtypes.types.CONSUMER | (CarColor.PINK << 3)},
 		]
 	}),
