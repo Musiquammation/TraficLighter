@@ -1,1 +1,1 @@
-export type Control = "left" | "right" | "up" | "down" | "debug" | "enter";
+export type Control = 'turnLeft' | 'turnRight' | 'yieldIns' | 'light' | 'fastView' | 'altern';

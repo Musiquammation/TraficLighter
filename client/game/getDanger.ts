@@ -2,6 +2,7 @@ import { Car } from "./Car";
 import { CAR_LINE, CAR_SIZE } from "./CAR_SIZE";
 import { Chunk } from "./Chunk";
 import { ChunkMap } from "./ChunkMap";
+import { COLOR_TURNS } from "./COLOR_TURNS";
 import { Direction, getCellDist, getDirectionDelta, opposeDirection, rotateDirectionToLeft, rotateDirectionToRight } from "./Direction";
 import { GridExplorer } from "./GridExplorer";
 import { modulo } from "./modulo";
@@ -159,14 +160,15 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 			break;
 
 		case roadtypes.types.TURN:
-			if (((road >> 6) & 0x3) !== dir.dir) {
-				if (dist > 0) {checkRight = true;}
-				break;
-			}
+		{
 			if (dist > 0) {checkRight = true;}
 
+			if (((road >> 6) & 0x3) !== dir.dir)
+				break;
+			
 
-			switch (((road >> 3) & 0x7) as roadtypes.TurnDirection) {
+			const type = ((road >> 3) & 0x7) as roadtypes.TurnDirection;
+			switch (type) {
 			case roadtypes.TurnDirection.RIGHT:
 				dir.turnRight();
 				break;
@@ -175,37 +177,24 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 				dir.turnLeft();
 				break;
 
-			case roadtypes.TurnDirection.FRONT_RIGHT:
-				if (car.color % 2)
-					dir.turnRight();
-				break;
-
-			case roadtypes.TurnDirection.FRONT_LEFT:
-				if (car.color % 2)
-					dir.turnLeft();
-				break;
-			case roadtypes.TurnDirection.LEFT_AND_RIGHT:
-				if (car.color % 2)
-					dir.turnLeft();
-				break;
-
-			case roadtypes.TurnDirection.ALL:
-				switch (car.color % 3) {
+			default:
+				switch (COLOR_TURNS[type - 2][car.color]) {
 				case 0:
 					break;
 
 				case 1:
-					dir.turnRight();
+					dir.turnLeft();
 					break;
 
 				case 2:
-					dir.turnLeft();
+					dir.turnRight();
 					break;
 				}
+				
 				break;
-			
 			}
 			break;
+		}
 
 		case roadtypes.types.PRIORITY:
 			if ((road >> 6) !== car.direction)
@@ -236,6 +225,48 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 				finish = true;
 			}
 			
+			break;
+
+		case roadtypes.types.ALTERN:
+			if (dist > 0) {checkRight = true;}
+
+			if (((road >> 6) & 0x3) !== dir.dir)
+				break;
+			
+
+			if (dist === 0) {
+				if (car.rotationStep >= 0) {
+					if (car.rotatingToRight) {
+						dir.turnRight();
+					} else {
+						dir.turnLeft();
+					}
+				}
+
+				/**
+				 * If dist == 0 (ie. we are on the block),
+				 * then we can't trust the block content
+				 * since it has been modified by car.behave().
+				 */
+				break;
+			}
+
+			switch ((road >> 3) & 0x3) {
+			// front
+			case 0:
+			case 2:
+				break;
+
+			// right
+			case 1:
+				dir.turnRight();
+				break;
+
+			// left
+			case 3:
+				dir.turnLeft();
+				break;
+			}
 			break;
 
 		}
@@ -336,24 +367,19 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 						break;
 					}
 
-					switch (((road >> 3) & 0x7) as roadtypes.TurnDirection) {
+					const type = ((road >> 3) & 0x7) as roadtypes.TurnDirection;
+					switch (type) {
 					case roadtypes.TurnDirection.RIGHT:
 					case roadtypes.TurnDirection.LEFT:
 						shouldBreak = true;
 						break;
 
-					case roadtypes.TurnDirection.FRONT_RIGHT:
-					case roadtypes.TurnDirection.FRONT_LEFT:
-						forbiddenCarsFlag |= 0b10101010;
-						break;
-
-					case roadtypes.TurnDirection.LEFT_AND_RIGHT:
+					default:
+					{
+						/// TODO: here
 						shouldBreak = true;
 						break;
-
-					case roadtypes.TurnDirection.ALL:
-						forbiddenCarsFlag |= 0b10110110;
-						break;
+					}
 					}
 
 					break;

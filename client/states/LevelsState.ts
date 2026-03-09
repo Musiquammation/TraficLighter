@@ -63,7 +63,7 @@ const LEVELS: MapConstructor[] = [
 				x: 11,
 				y: 14,
 				color: CarColor.RED,
-				rythm: 	45,
+				rythm: 	40,
 				couldown: 1,
 				direction: Direction.RIGHT,
 				count: Infinity,
@@ -74,7 +74,7 @@ const LEVELS: MapConstructor[] = [
 				x: 11,
 				y: 12,
 				color: CarColor.YELLOW,
-				rythm: 	45,
+				rythm: 	40,
 				couldown: 1,
 				direction: Direction.RIGHT,
 				count: Infinity,
@@ -108,7 +108,7 @@ const LEVELS: MapConstructor[] = [
 				x: 1,
 				y: 5,
 				color: CarColor.RED,
-				rythm: 	45,
+				rythm: 	22,
 				couldown: 1,
 				direction: Direction.RIGHT,
 				count: Infinity,
@@ -119,7 +119,7 @@ const LEVELS: MapConstructor[] = [
 				x: 1,
 				y: 10,
 				color: CarColor.BLUE,
-				rythm: 	45,
+				rythm: 	22,
 				couldown: 1,
 				direction: Direction.RIGHT,
 				count: Infinity,
@@ -129,8 +129,8 @@ const LEVELS: MapConstructor[] = [
 			{
 				x: 20,
 				y: 30,
-				color: CarColor.GREEN,
-				rythm: 	135,
+				color: CarColor.CYAN,
+				rythm: 	120,
 				couldown: 1,
 				direction: Direction.UP,
 				count: Infinity,
@@ -147,7 +147,7 @@ const LEVELS: MapConstructor[] = [
 			{
 				x: 20,
 				y: 1,
-				data: roadtypes.types.CONSUMER | (CarColor.GREEN << 3)
+				data: roadtypes.types.CONSUMER | (CarColor.CYAN << 3)
 			},
 
 			{
@@ -168,7 +168,7 @@ const LEVELS: MapConstructor[] = [
 				x: 1,
 				y: 5,
 				color: CarColor.RED,
-				rythm: 	45,
+				rythm: 	22,
 				couldown: 1,
 				direction: Direction.RIGHT,
 				count: Infinity,
@@ -179,7 +179,7 @@ const LEVELS: MapConstructor[] = [
 				x: 1,
 				y: 10,
 				color: CarColor.BLUE,
-				rythm: 	45,
+				rythm: 	22,
 				couldown: 1,
 				direction: Direction.RIGHT,
 				count: Infinity,
@@ -189,8 +189,8 @@ const LEVELS: MapConstructor[] = [
 			{
 				x: 20,
 				y: 30,
-				color: CarColor.GREEN,
-				rythm: 	135,
+				color: CarColor.CYAN,
+				rythm: 	120,
 				couldown: 1,
 				direction: Direction.UP,
 				count: Infinity,
@@ -207,7 +207,7 @@ const LEVELS: MapConstructor[] = [
 			{
 				x: 20,
 				y: 1,
-				data: roadtypes.types.CONSUMER | (CarColor.GREEN << 3)
+				data: roadtypes.types.CONSUMER | (CarColor.CYAN << 3)
 			},
 
 			{
@@ -228,7 +228,7 @@ const LEVELS: MapConstructor[] = [
 				x: 1,
 				y: 5,
 				color: CarColor.RED,
-				rythm: 	45,
+				rythm: 	25,
 				couldown: 1,
 				direction: Direction.RIGHT,
 				count: Infinity,
@@ -239,7 +239,7 @@ const LEVELS: MapConstructor[] = [
 				x: 1,
 				y: 7,
 				color: CarColor.RED,
-				rythm: 	45,
+				rythm: 	25,
 				couldown: 1,
 				direction: Direction.RIGHT,
 				count: Infinity,
@@ -250,7 +250,7 @@ const LEVELS: MapConstructor[] = [
 				x: 1,
 				y: 9,
 				color: CarColor.RED,
-				rythm: 	45,
+				rythm: 	25,
 				couldown: 1,
 				direction: Direction.RIGHT,
 				count: Infinity,
@@ -261,7 +261,7 @@ const LEVELS: MapConstructor[] = [
 				x: 5,
 				y: 1,
 				color: CarColor.RED,
-				rythm: 	45,
+				rythm: 	25,
 				couldown: 1,
 				direction: Direction.DOWN,
 				count: Infinity,
@@ -272,7 +272,7 @@ const LEVELS: MapConstructor[] = [
 				x: 7,
 				y: 1,
 				color: CarColor.RED,
-				rythm: 	45,
+				rythm: 	25,
 				couldown: 1,
 				direction: Direction.DOWN,
 				count: Infinity,
@@ -283,7 +283,7 @@ const LEVELS: MapConstructor[] = [
 				x: 9,
 				y: 1,
 				color: CarColor.RED,
-				rythm: 	45,
+				rythm: 	25,
 				couldown: 1,
 				direction: Direction.DOWN,
 				count: Infinity,
@@ -294,7 +294,7 @@ const LEVELS: MapConstructor[] = [
 				x: 20,
 				y: 1,
 				color: CarColor.BLUE,
-				rythm: 	120,
+				rythm: 	90,
 				couldown: 1,
 				direction: Direction.DOWN,
 				count: Infinity,
@@ -304,8 +304,8 @@ const LEVELS: MapConstructor[] = [
 			{
 				x: 1,
 				y: 20,
-				color: CarColor.GREEN,
-				rythm: 	120,
+				color: CarColor.CYAN,
+				rythm: 	90,
 				couldown: 1,
 				direction: Direction.RIGHT,
 				count: Infinity,
@@ -320,7 +320,7 @@ const LEVELS: MapConstructor[] = [
 			{
 				x: 30,
 				y: 20,
-				data: roadtypes.types.CONSUMER | (CarColor.GREEN << 3)
+				data: roadtypes.types.CONSUMER | (CarColor.CYAN << 3)
 			},
 
 			{
@@ -380,7 +380,7 @@ const LEVELS: MapConstructor[] = [
 			{
 				x: 1,
 				y: 11,
-				color: CarColor.GREEN,
+				color: CarColor.CYAN,
 				rythm: 	60,
 				couldown: 1,
 				direction: Direction.RIGHT,
@@ -424,7 +424,7 @@ const LEVELS: MapConstructor[] = [
 			{
 				x: 1,
 				y: 27,
-				color: CarColor.GREEN,
+				color: CarColor.CYAN,
 				rythm: 	60,
 				couldown: 1,
 				direction: Direction.RIGHT,
@@ -480,8 +480,160 @@ const LEVELS: MapConstructor[] = [
 			{x: 28, y: 2, data: roadtypes.types.CONSUMER | (CarColor.RED << 3)},
 			{x: 28, y: 9, data: roadtypes.types.CONSUMER | (CarColor.YELLOW << 3)},
 			{x: 28, y: 23, data: roadtypes.types.CONSUMER | (CarColor.BLUE << 3)},
-			{x: 28, y: 30, data: roadtypes.types.CONSUMER | (CarColor.GREEN << 3)},
+			{x: 28, y: 30, data: roadtypes.types.CONSUMER | (CarColor.CYAN << 3)},
 			{x: 1, y: 17, data: roadtypes.types.CONSUMER | (CarColor.PINK << 3)},
 		]
 	}),
+
+	// Level 5
+	new MapConstructor({
+		time: (599.9)*60,
+		width: 31,
+		height: 31,
+		spawners: [
+			// Red
+			{
+				x: 1,
+				y: 16,
+				color: CarColor.RED,
+				rythm: 	15,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 1,
+				y: 17,
+				color: CarColor.RED,
+				rythm: 	15,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 1
+			},
+
+			// Yellow
+			{
+				x: 30,
+				y: 14,
+				color: CarColor.YELLOW,
+				rythm: 	15,
+				couldown: 1,
+				direction: Direction.LEFT,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 30,
+				y: 15,
+				color: CarColor.YELLOW,
+				rythm: 	15,
+				couldown: 1,
+				direction: Direction.LEFT,
+				count: Infinity,
+				score: 1
+			},
+
+
+			// Blue
+			{
+				x: 14,
+				y: 1,
+				color: CarColor.BLUE,
+				rythm: 	15,
+				couldown: 1,
+				direction: Direction.DOWN,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 15,
+				y: 1,
+				color: CarColor.BLUE,
+				rythm: 	15,
+				couldown: 1,
+				direction: Direction.DOWN,
+				count: Infinity,
+				score: 1
+			},
+
+			// Cyan
+			{
+				x: 16,
+				y: 30,
+				color: CarColor.GREEN,
+				rythm: 	15,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 17,
+				y: 30,
+				color: CarColor.GREEN,
+				rythm: 	15,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+
+			// Green
+			{
+				x: 3,
+				y: 2,
+				color: CarColor.CYAN,
+				rythm: 	60,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 20
+			},
+
+			// White
+			{
+				x: 2,
+				y: 3,
+				color: CarColor.WHITE,
+				rythm: 	60,
+				couldown: 1,
+				direction: Direction.DOWN,
+				count: Infinity,
+				score: 20
+			},
+
+			// Pink
+			{
+				x: 5,
+				y: 5,
+				color: CarColor.PINK,
+				rythm: 	60,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 30
+			},
+		],
+
+		roads: [
+			{x: 30, y: 16, data: roadtypes.types.CONSUMER | (CarColor.RED << 3)},
+			{x: 30, y: 17, data: roadtypes.types.CONSUMER | (CarColor.RED << 3)},
+			{x:  1, y: 14, data: roadtypes.types.CONSUMER | (CarColor.YELLOW << 3)},
+			{x:  1, y: 15, data: roadtypes.types.CONSUMER | (CarColor.YELLOW << 3)},
+			{x: 14, y: 30, data: roadtypes.types.CONSUMER | (CarColor.BLUE << 3)},
+			{x: 15, y: 30, data: roadtypes.types.CONSUMER | (CarColor.BLUE << 3)},
+			{x: 16, y:  1, data: roadtypes.types.CONSUMER | (CarColor.GREEN << 3)},
+			{x: 17, y:  1, data: roadtypes.types.CONSUMER | (CarColor.GREEN << 3)},
+
+			{x: 29, y: 29, data: roadtypes.types.CONSUMER | (CarColor.PINK << 3)},
+			{x: 29, y:  2, data: roadtypes.types.CONSUMER | (CarColor.CYAN << 3)},
+			{x:  2, y: 29, data: roadtypes.types.CONSUMER | (CarColor.WHITE << 3)},
+		]
+	})
 ];

@@ -42,6 +42,12 @@ export namespace roadtypes {
 		 */
 		LIGHT,
 
+		/**
+		 * [+3, +4]: code {00=front, 01=right, 10=front, 11=left}
+		 * [+5]: share
+		 * [+6, +7]: origin direction
+		 */
+		ALTERN,
 
 		/**
 		 * [+3,+4,+5]: color
@@ -58,13 +64,13 @@ export namespace roadtypes {
 	export enum TurnDirection {
 		RIGHT,
 		LEFT,
-		FRONT_RIGHT,
-		FRONT_LEFT,
-		LEFT_AND_RIGHT,
-		ALL
+		ALL_0,
+		ALL_1,
+		ALL_2,
+		ALL_3,
+		ALL_4,
+		ALL_5,
 	}
-
-	const TURN_DIRECTION_LENGTH = 6 as const;
 
 
 
@@ -122,28 +128,22 @@ export namespace roadtypes {
 
 			switch (type) {
 			case TurnDirection.RIGHT:
-				drawImage('turn_turn', direction);
+				drawImage('turn', direction);
 				break;
 
 			case TurnDirection.LEFT:
-				drawImage('turn_turn', direction, {x: false, y: true, color: -1});
+				drawImage('turn', direction, {x: false, y: true, color: -1});
 				break;
 				
-			case TurnDirection.FRONT_RIGHT:
-				drawImage('turn_select', direction);
+			case TurnDirection.ALL_0:
+			case TurnDirection.ALL_1:
+			case TurnDirection.ALL_2:
+			case TurnDirection.ALL_3:
+			case TurnDirection.ALL_4:
+			case TurnDirection.ALL_5:
+				drawImage('all' + (type - TurnDirection.ALL_0), direction);
 				break;
 
-			case TurnDirection.FRONT_LEFT:
-				drawImage('turn_select', direction, {x: false, y: true, color: -1});
-				break;				
-				
-			case TurnDirection.LEFT_AND_RIGHT:
-				drawImage('turn_full', direction);
-				break;
-				
-			case TurnDirection.ALL:
-				drawImage('turn_all', direction);
-				break;
 			}
 
 			return;
@@ -159,6 +159,12 @@ export namespace roadtypes {
 		{
 			drawImage(road & (1<<3) ? 'light_green' : 'light_red',
 				Math.PI/2 * ((road >> 6) & 0x3));
+			break;
+		}
+
+		case types.ALTERN:
+		{
+			drawImage('altern', ((road >> 6) & 0x3));
 			break;
 		}
 
@@ -220,11 +226,11 @@ export namespace roadtypes {
 			if (delta > 0) {
 				type--;
 				if (type < 0) {
-					type = TURN_DIRECTION_LENGTH-1;
+					type = 7;
 				}
 			} else {
 				type++;
-				if (type >= TURN_DIRECTION_LENGTH) {
+				if (type >= 8) {
 					type = 0;
 				}
 			}

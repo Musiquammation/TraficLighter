@@ -8,6 +8,7 @@ import { CAR_LINE, CAR_SIZE } from "./CAR_SIZE";
 import { modulo } from "./modulo";
 import { getDanger } from "./getDanger";
 import { ImageLoader } from "../handler/ImageLoader";
+import { COLOR_TURNS } from "./COLOR_TURNS";
 
 
 const RENDER_DISTANCE = 32;
@@ -78,6 +79,7 @@ export class Car {
 			break;
 	
 		case roadtypes.types.TURN:
+		case roadtypes.types.ALTERN:
 		{
 			if (this.rotationStep >= 0) {
 				const m = getAttach(this.direction, this.rotatingToRight, this.rotationStep);
@@ -116,7 +118,11 @@ export class Car {
 		ctx.restore();
 	}
 
-	behave(road: roadtypes.road_t, game: Game): 'alive' | 'won' | 'killed' {
+	behave(road: roadtypes.road_t, game: Game):
+		'alive' | 'won' | 'killed' | roadtypes.road_t
+
+	{
+		let roadToReturn: roadtypes.road_t | null = null;
 		let speedTarget = this.speedLimit;
 		let alive: 'alive' | 'won' | 'killed' = 'alive';
 
@@ -156,49 +162,60 @@ export class Car {
 					this.rotationStep = 0;
 					break;
 
-				case roadtypes.TurnDirection.FRONT_RIGHT:
-					if (this.color % 2) {
-						this.rotatingToRight = true;
-						this.rotationStep = 0;
-					}
-					break;
-
-				case roadtypes.TurnDirection.FRONT_LEFT:
-					if (this.color % 2) {
-						this.rotatingToRight = false;
-						this.rotationStep = 0;
-					}
-					break;
-
-				case roadtypes.TurnDirection.LEFT_AND_RIGHT:
-					if (this.color % 2) {
-						this.rotatingToRight = true;
-						this.rotationStep = 0;
-					} else {
-						this.rotatingToRight = false;
-						this.rotationStep = 0;
-					}
-
-					break;
-
-				case roadtypes.TurnDirection.ALL:
-					switch (this.color % 3) {
+				default:
+					switch (COLOR_TURNS[type - 2][this.color]) {
 					case 0:
 						break;
 
 					case 1:
-						this.rotatingToRight = true;
+						this.rotatingToRight = false;
 						this.rotationStep = 0;
 						break;
 
 					case 2:
-						this.rotatingToRight = false;
+						this.rotatingToRight = true;
 						this.rotationStep = 0;
 						break;
 					}
+
+					break;
+					
+				}
+
+				break;
+			}
+
+			case roadtypes.types.ALTERN:
+			{
+				const direction: Direction = ((road >> 6) & 0x3);
+				if (this.direction !== direction)
+					break;
+
+				let code = (road >> 3) & 0x3;
+				
+				switch (code) {
+				case 0: // front
+					code = 1;
+					break;
+
+				case 1: // right
+					this.rotatingToRight = true;
+					this.rotationStep = 0;
+					code = 2;
+					break;
+
+				case 2: // front
+					code = 3;
+					break;
+
+				case 3: // left
+					this.rotatingToRight = false;
+					this.rotationStep = 0;
+					code = road & (1<<5) ? 1 : 0;
 					break;
 				}
 
+				roadToReturn = (road & ~(0x3 << 3)) | ((code & 0x3) << 3);
 				break;
 			}
 
@@ -261,13 +278,17 @@ export class Car {
 		this.nextSpeed = speed;
 
 
+		if (alive === 'alive' && roadToReturn !== null) {
+			return roadToReturn;
+		}
+		
 		return alive;
 	}
 	
-	move(road: roadtypes.road_t) {
+	move() {
 		this.speed = this.nextSpeed;
 
-		const basicMove = () => {
+		if (this.rotationStep < 0) {
 			switch (this.direction) {
 			case Direction.RIGHT:
 				this.x += this.speed;
@@ -285,70 +306,46 @@ export class Car {
 				this.y += this.speed;
 				break;
 			}
-		};
-
-		switch (road & 0x7) {
-		case roadtypes.types.VOID:
-			return;
-
-		case roadtypes.types.ROAD:
-		case roadtypes.types.PRIORITY:
-		case roadtypes.types.SPAWNER:
-		case roadtypes.types.CONSUMER:
-		case roadtypes.types.LIGHT:
-			basicMove();
-			return;
-
-		case roadtypes.types.TURN:
-		{
-			if (this.rotationStep < 0) {
-				basicMove();
-				return;
-			}
-
-			this.rotationStep += this.speed;
-
-			if (this.rotationStep >= 1) {
-				const nextDir = this.rotatingToRight ?
-					rotateDirectionToRight(this.direction) :
-					rotateDirectionToLeft(this.direction);
-
-				let dx;
-				let dy;
-				switch (nextDir) {
-				case Direction.RIGHT:
-					dx = 1.01;
-					dy = .5;
-					break;
-
-				case Direction.UP:
-					dx = .5;
-					dy = -.01;
-					break;
-
-				case Direction.LEFT:
-					dx = -.01;
-					dy = .5;
-					break;
-
-				case Direction.DOWN:
-					dx = .5
-					dy = 1.01;
-					break;
-				}
-
-				
-				this.x = Math.floor(this.x) + dx;
-				this.y = Math.floor(this.y) + dy;
-				this.direction = nextDir;
-				this.rotationStep = -1;
-			}
 			
-
 			return;
 		}
 
+		this.rotationStep += this.speed;
 
+		if (this.rotationStep >= 1) {
+			const nextDir = this.rotatingToRight ?
+				rotateDirectionToRight(this.direction) :
+				rotateDirectionToLeft(this.direction);
+
+			let dx;
+			let dy;
+			switch (nextDir) {
+			case Direction.RIGHT:
+				dx = 1.01;
+				dy = .5;
+				break;
+
+			case Direction.UP:
+				dx = .5;
+				dy = -.01;
+				break;
+
+			case Direction.LEFT:
+				dx = -.01;
+				dy = .5;
+				break;
+
+			case Direction.DOWN:
+				dx = .5
+				dy = 1.01;
+				break;
+			}
+
+			
+			this.x = Math.floor(this.x) + dx;
+			this.y = Math.floor(this.y) + dy;
+			this.direction = nextDir;
+			this.rotationStep = -1;
 		}
 	}
 }

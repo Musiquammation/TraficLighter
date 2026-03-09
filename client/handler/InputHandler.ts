@@ -3,12 +3,12 @@ import type { Control } from "./Control";
 type Mode = "zqsd" | "wasd";
 
 class Keydown {
-	left = false;
-	right = false;
-	up = false;
-	down = false;
-	debug = false;
-	enter = false;
+	turnLeft = false;
+	turnRight = false;
+	yieldIns = false;
+	light = false;
+	fastView = false;
+	altern = false;
 }
 
 enum Action {
@@ -20,21 +20,20 @@ enum Action {
 };
 
 class KeyboardCollector {
-	left = Action.NONE;
-	right = Action.NONE;
-	up = Action.NONE;
-	down = Action.NONE;
-	debug = Action.NONE;
-	enter = Action.NONE;
+	turnLeft = Action.NONE;
+	turnRight = Action.NONE;
+	yieldIns = Action.NONE;
+	light = Action.NONE;
+	fastView = Action.NONE;
+	altern = Action.NONE;
 }
 
 
 
 export class InputHandler {
-	static CONTROLS: Control[] = ["left", "right", "up", "down", "debug", "enter"];
+	static CONTROLS: Control[] = ['turnLeft', 'turnRight', 'yieldIns', 'light', 'fastView', 'altern'];
 	static CONTROL_STACK_SIZE = 256;
 
-	private keyboardUsed = false;
 
 	private collectedKeys: Record<Control, Action> = new KeyboardCollector();
 
@@ -44,17 +43,9 @@ export class InputHandler {
 
 	private killedPress: Record<Control, boolean> = new Keydown();
 
-	firstPressCapture: Record<Control, boolean> = new Keydown();
-	killedPressCapture: Record<Control, boolean> = new Keydown();
-
 	private keyMap: Record<string, Control>;
 
 
-	gameRecords: Uint32Array[] | null = null;
-	frameCount = 0;
-	recordCompletion = -1;
-	firstRecordLine = 0;
-	firstRecordLineCount = 0;
 
 	onMouseUp = (e: MouseEvent) => {};
 	onMouseDown = (e: MouseEvent) => {};
@@ -63,31 +54,21 @@ export class InputHandler {
 
 	static KEYBOARDS: Record<Mode, Record<string, Control>> = {
 		zqsd: {
-			KeyZ: 'up',
-			KeyQ: 'left',
-			KeyS: 'down',
-			KeyD: 'right',
-			KeyP: 'debug',
-			Space: 'up',
-			ArrowUp: 'up',
-			ArrowLeft: 'left',
-			ArrowDown: 'down',
-			ArrowRight: 'right',
-			Enter: 'enter'
+			KeyE: 'turnLeft',
+			KeyR: 'turnRight',
+			KeyP: 'yieldIns',
+			KeyL: 'light',
+			KeyC: 'fastView',
+			KeyS: 'altern',
 		},
 
 		wasd: {
-			KeyW: 'up',
-			KeyA: 'left',
-			KeyS: 'down',
-			KeyD: 'right',
-			KeyP: 'debug',
-			Space: 'up',
-			ArrowUp: 'up',
-			ArrowLeft: 'left',
-			ArrowDown: 'down',
-			ArrowRight: 'right',
-			Enter: 'enter'
+			KeyE: 'turnLeft',
+			KeyR: 'turnRight',
+			KeyP: 'yieldIns',
+			KeyL: 'light',
+			KeyC: 'fastView',
+			KeyS: 'altern',
 		},
 	};
 
@@ -226,13 +207,12 @@ export class InputHandler {
 
 
 	
-
-
-	startListeners(target: EventTarget) {
+	startKeydownListeners(target: EventTarget) {
 		target.addEventListener("keydown", this.onKeydown);
 		target.addEventListener("keyup", this.onKeyup);
-		this.keyboardUsed = true;
+	}
 
+	startMouseListeners(target: EventTarget) {
 		target.addEventListener('mouseup', (e) => {
 			this.onMouseUp(e as MouseEvent);
 		});
@@ -256,11 +236,8 @@ export class InputHandler {
 	}
 
 	removeListeners(target: EventTarget) {
-		if (this.keyboardUsed) {
-			target.removeEventListener("keydown", this.onKeydown);
-			target.removeEventListener("keyup", this.onKeyup);
-		}
-
+		target.removeEventListener("keydown", this.onKeydown);
+		target.removeEventListener("keyup", this.onKeyup);
 	}
 	
 	

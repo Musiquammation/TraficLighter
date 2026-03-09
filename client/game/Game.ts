@@ -23,6 +23,8 @@ import { GridExplorer } from "./GridExplorer";
 const timeLeftDiv = document.getElementById("timeLeft")!;
 const scoreDiv = document.getElementById("score")!;
 const mousePosDiv = document.getElementById("mousePos")!;
+const FAST_TIMES = 4;
+
 
 export class Game extends GameState {
 	private camera: Vector3 = {x: 0, y: 0, z: 20};
@@ -32,6 +34,8 @@ export class Game extends GameState {
 	private carFrame = 0;
 	private runningCars = false;
 	private score = 0;
+	private lastMouseX = 0;
+	private lastMouseY = 0;
 
 
 	private placeRoad(x: number, y: number) {
@@ -186,24 +190,24 @@ export class Game extends GameState {
 
 		this.handleHTML();
 
-		let lastX = 0;
-		let lastY = 0;
 
-		function updateMouse(x: number, y: number) {
+		const updateMouse = (x: number, y: number) => {
 			mousePosDiv.innerText = `(${x.toFixed(1)},${y.toFixed(1)})`;
+			this.lastMouseX = x;
+			this.lastMouseY = y;
 		}
 
 		input.onMouseUp = e => {
 			const {x,y} = this.getMousePosition(e.clientX, e.clientY);
-			lastX = x;
-			lastY = y;
+			this.lastMouseX = x;
+			this.lastMouseY = y;
 			updateMouse(x, y);
 		};
 		
 		input.onMouseDown = e => {
 			const {x,y} = this.getMousePosition(e.clientX, e.clientY);
-			lastX = x;
-			lastY = y;
+			this.lastMouseX = x;
+			this.lastMouseY = y;
 
 			const leftDown   = (e.buttons & 1) !== 0;
 			const rightDown  = (e.buttons & 2) !== 0;
@@ -234,8 +238,8 @@ export class Game extends GameState {
 			const middleDown = (e.buttons & 4) !== 0;
 
 			if (middleDown) {
-				this.camera.x += lastX - x;
-				this.camera.y += lastY - y;
+				this.camera.x += this.lastMouseX - x;
+				this.camera.y += this.lastMouseY - y;
 
 				const c = this.getMousePosition(e.clientX, e.clientY);
 				x = c.x;
@@ -251,8 +255,8 @@ export class Game extends GameState {
 			}
 
 
-			lastX = x;
-			lastY = y;
+			this.lastMouseX = x;
+			this.lastMouseY = y;
 			updateMouse(x, y);
 		};
 
@@ -314,25 +318,27 @@ export class Game extends GameState {
 			const x = modulo(Math.floor(car.x), Chunk.SIZE);
 			const y = modulo(Math.floor(car.y), Chunk.SIZE);
 			const road = chunk.getRoad(x, y);
-			switch (car.behave(road, this)) {
-			case "alive":
-				break;
+			const behave = car.behave(road, this);
+			if (typeof behave === 'number') {
+				chunk.setRoad(x, y, behave);
+			} else {
+				switch (behave) {
+				case "alive":
+					break;
 
-			case "won":
-				this.score += car.score;
-			case "killed":
-				car.alive = false;
-				break;
+				case "won":
+					this.score += car.score;
+				case "killed":
+					car.alive = false;
+					break;
+				}
 			}
 		}
 
 
 		// Move cars
-		for (let {car, chunk} of this.chunkMap.iterateCars()) {
-			const x = modulo(Math.floor(car.x), Chunk.SIZE);
-			const y = modulo(Math.floor(car.y), Chunk.SIZE);
-			const road = chunk.getRoad(x, y);
-			car.move(road);
+		for (let {car} of this.chunkMap.iterateCars()) {
+			car.move();
 		}
 
 
@@ -341,15 +347,53 @@ export class Game extends GameState {
 		this.carFrame++;
 	}
 
-	frame(game: GameHandler) {
-		if (this.runningCars)
-			this.runCars();
-
-		if (this.carFrame < this.chunkMap.time)
-			return null;
-
-		return new TransitionState(this);
+	placeKeyboardRoads(input: InputHandler) {
+		const x = Math.floor(this.lastMouseX);
+		const y = Math.floor(this.lastMouseY);
+		const current = this.chunkMap.getRoad(x, y);
 		
+		if (input.first('turnRight')) {
+			const road = roadtypes.types.TURN | 
+				(roadtypes.TurnDirection.RIGHT << 3) |
+				(current & (3<<6));
+
+			this.chunkMap.setRoad(x, y, road);	
+
+		} else if (input.first('turnLeft')) {
+			const road = roadtypes.types.TURN | 
+				(roadtypes.TurnDirection.LEFT << 3) |
+				(current & (3<<6));
+
+			this.chunkMap.setRoad(x, y, road);
+			
+		} else if (input.first('yieldIns')) {
+			const road = roadtypes.types.PRIORITY | 
+				(current & (3<<6));
+
+			this.chunkMap.setRoad(x, y, road);
+
+		} else if (input.first('altern')) {
+			const road = roadtypes.types.ALTERN | 
+				(current & (3<<6));
+
+			this.chunkMap.setRoad(x, y, road);
+
+		}
+	}
+
+	frame(game: GameHandler) {
+		let times = game.inputHandler.press('fastView') ? FAST_TIMES : 1;
+		this.placeKeyboardRoads(game.inputHandler);
+
+		for (let i = 0; i < times; i++) {
+			if (this.runningCars)
+				this.runCars();
+	
+			if (this.carFrame >= this.chunkMap.time)
+				return new TransitionState(this);
+		}
+	
+		return null;
 	}
 
 

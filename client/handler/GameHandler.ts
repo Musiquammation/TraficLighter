@@ -34,10 +34,12 @@ export class GameHandler {
 
 	constructor(
 		keyboardMode: "zqsd" | "wasd",
-		eventTarget: EventTarget
+		mouseEventTarget: EventTarget,
+		keydownEventTarget: EventTarget,
 	) {
 		this.inputHandler = new InputHandler(keyboardMode);
-		this.inputHandler.startListeners(eventTarget);
+		this.inputHandler.startKeydownListeners(keydownEventTarget);
+		this.inputHandler.startMouseListeners(mouseEventTarget);
 
 		this.state = new LevelsState();
 		this.state.enter(undefined, this.inputHandler);
@@ -70,11 +72,13 @@ export class GameHandler {
 
 		// Load game assets
 		this.imgLoader.load({
-			turn_all: "assets/turn/all.png",
-			turn_turn: "assets/turn/turn.png",
-			turn_front: "assets/turn/front.png",
-			turn_select: "assets/turn/select.png",
-			turn_full: "assets/turn/full.png",
+			turn: "assets/turn/turn.png",
+			all0: "assets/turn/all0.png",
+			all1: "assets/turn/all1.png",
+			all2: "assets/turn/all2.png",
+			all3: "assets/turn/all3.png",
+			all4: "assets/turn/all4.png",
+			all5: "assets/turn/all5.png",
 			yield: "assets/yield.png",
 			light_red: "assets/lights/red.png",
 			light_orange: "assets/lights/orange.png",
@@ -89,8 +93,8 @@ export class GameHandler {
 				"#ac3232",
 				"#fbf236",
 				"#5b6ee1",
-				"#5fcde4",
 				"#6abe30",
+				"#5fcde4",
 				"#d77bba",
 				"#f0f8ed",
 				"#6e6e6e"
@@ -105,6 +109,7 @@ export class GameHandler {
 	
 
 	gameLogic() {
+		this.inputHandler.update();
 		const next = this.state.frame(this);
 
 		if (next) {
