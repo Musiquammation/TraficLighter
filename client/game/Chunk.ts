@@ -120,7 +120,7 @@ export class Chunk {
 	}
 
 
-	runEvents(frameCount: number) {
+	runEvents(lightTick: number) {
 		// Run car spawners
 		for (const [idx, spawner] of this.carSpawners) {
 			spawner.couldown--;
@@ -150,10 +150,10 @@ export class Chunk {
 
 		// Run lights
 		const frameCountMod = [
-			Math.floor(frameCount/(8*30)) % 4,
-			Math.floor(frameCount/(4*30)) % 8,
-			Math.floor(frameCount/(2*30)) % 16,
-			Math.floor(frameCount/(1*30)) % 32
+			Math.floor(lightTick)%4,
+			Math.floor(lightTick)%8,
+			Math.floor(lightTick)%16,
+			Math.floor(lightTick)
 		];
 
 		for (const [idx, light] of this.lights) {

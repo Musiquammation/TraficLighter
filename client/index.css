@@ -90,8 +90,23 @@ canvas {
 }
 
 
+#lightTurn {
+	position: absolute;
+	right: 10px;
+	top: calc(3vmin + 20px);
+	font-family: 'Courier New', Courier, monospace;
+	color: white;
+	font-size: 2.5vmin;
+	background-color: orange;
+	border-radius: 1vmin;
+	padding: 10px;
+}
+
 
 
 .hidden {
 	display: none;
 }
+
+
+

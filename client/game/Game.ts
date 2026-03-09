@@ -23,11 +23,15 @@ import { GridExplorer } from "./GridExplorer";
 const timeLeftDiv = document.getElementById("timeLeft")!;
 const scoreDiv = document.getElementById("score")!;
 const mousePosDiv = document.getElementById("mousePos")!;
+const lightTurnDiv = document.getElementById("lightTurn")!;
+
 const FAST_TIMES = 4;
+const LIGHT_TICK = 45;
 
 
 export class Game extends GameState {
 	private camera: Vector3 = {x: 0, y: 0, z: 20};
+
 
 	chunkMap = new ChunkMap();
 	private graph = new PathGraph(this.chunkMap);
@@ -36,6 +40,8 @@ export class Game extends GameState {
 	private score = 0;
 	private lastMouseX = 0;
 	private lastMouseY = 0;
+	private lightTick = 0;
+	private lightTickCouldown = 0;
 
 
 	private placeRoad(x: number, y: number) {
@@ -157,6 +163,8 @@ export class Game extends GameState {
 		this.carFrame = 0;
 		this.runningCars = false;
 		this.chunkMap.reset();
+		this.lightTick = 0;
+		this.lightTickCouldown = 0;
 
 		(document.getElementById("pause") as PauseElement|null)?.togglePause(false);
 	}
@@ -306,10 +314,6 @@ export class Game extends GameState {
 	}
 
 	runCars() {
-		for (let [_, chunk] of this.chunkMap) {
-			chunk.runEvents(this.carFrame);
-		}
-
 		// Behave cars
 		for (let {car, chunk} of this.chunkMap.iterateCars()) {
 			if (!car.alive)
@@ -381,13 +385,32 @@ export class Game extends GameState {
 		}
 	}
 
+	runLightTicks() {
+		this.lightTickCouldown++;
+		if (this.lightTickCouldown >= LIGHT_TICK) {
+			this.lightTickCouldown -= LIGHT_TICK;
+			this.lightTick++;
+			if (this.lightTick >= 32) {
+				this.lightTick -= 32;
+			}
+			lightTurnDiv.textContent = this.lightTick.toString().padStart(2, '0');
+		}
+	}
+
 	frame(game: GameHandler) {
 		let times = game.inputHandler.press('fastView') ? FAST_TIMES : 1;
 		this.placeKeyboardRoads(game.inputHandler);
 
 		for (let i = 0; i < times; i++) {
-			if (this.runningCars)
+			this.runLightTicks();
+
+			if (this.runningCars) {
+				for (let [_, chunk] of this.chunkMap) {
+					chunk.runEvents(this.carFrame);
+				}
+
 				this.runCars();
+			}
 	
 			if (this.carFrame >= this.chunkMap.time)
 				return new TransitionState(this);
