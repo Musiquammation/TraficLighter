@@ -342,16 +342,38 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 		}
 
 		const runCheck = (
-			turnDir: {x: number, y: number},
-			opDir: Direction,
+			dir: Direction,
+			explorer: GridExplorer,
+			checkDist: number,
+			forbiddenCarsFlag: number
 		) => {
-			let forbiddenCarsFlag = 0;
-			const check = new GridExplorer(pos);
+			const turnDir = getDirectionDelta(dir);
+			const leftDir = rotateDirectionToLeft(dir);
+			const rightDir = rotateDirectionToRight(dir);
+			const opDir = opposeDirection(dir);
 
-			for (let checkDist = 1; checkDist < range; checkDist++) {
-				check.move(turnDir, cmap);
+			for (; checkDist < range; checkDist++) {
+				explorer.move(turnDir, cmap);
 
-				const road = check.getRoad();
+				const road = explorer.getRoad();
+
+				const checkToLeft = () => {
+					runCheck(
+						leftDir,
+						new GridExplorer(explorer),
+						checkDist+1,
+						forbiddenCarsFlag
+					);
+				};
+
+				const checkToRight = () => {
+					runCheck(
+						rightDir,
+						new GridExplorer(explorer),
+						checkDist+1,
+						forbiddenCarsFlag
+					);
+				};
 
 				let shouldBreak = false;
 				switch ((road & 0x7) as roadtypes.types) {
@@ -363,21 +385,41 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 					break
 
 				case roadtypes.types.TURN:
-					if (((road >> 6) & 0x3) !== opDir) {
-						break;
-					}
-
 					const type = ((road >> 3) & 0x7) as roadtypes.TurnDirection;
 					switch (type) {
 					case roadtypes.TurnDirection.RIGHT:
-					case roadtypes.TurnDirection.LEFT:
-						shouldBreak = true;
+					{
+						const roadDir = (road >> 6);
+						if (roadDir === opDir) {
+							shouldBreak = true;
+							break;
+						}
+
+						if (roadDir === leftDir)
+							checkToLeft();
+						
 						break;
+					}
+						
+					case roadtypes.TurnDirection.LEFT:
+					{
+						const roadDir = (road >> 6);
+						if (roadDir === opDir) {
+							shouldBreak = true;
+							break;
+						}
+
+						if (roadDir === rightDir)
+							checkToRight();
+
+						break;
+					}
+
 
 					default:
 					{
 						/// TODO: here
-						shouldBreak = true;
+						// shouldBreak = true;
 						break;
 					}
 					}
@@ -405,7 +447,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 				if (shouldBreak)
 					break;
 
-				const over = check.chunk.getCar(check.x, check.y);
+				const over = explorer.chunk.getCar(explorer.x, explorer.y);
 				if (over === 'full' || over === 'empty')
 					continue;
 
@@ -443,11 +485,11 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 
 
 		if (checkRight) {
-			runCheck(checkDir.rd, checkDir.rop);
+			runCheck(checkDir.rdir, new GridExplorer(pos), 1, 0);
 		}
 
 		if (checkLeft) {
-			runCheck(checkDir.ld, checkDir.lop);
+			runCheck(checkDir.ldir, new GridExplorer(pos), 1, 0);
 		}
 
 		pos.move(dir.d, cmap);

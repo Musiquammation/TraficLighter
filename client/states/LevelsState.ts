@@ -61,7 +61,7 @@ const LEVELS: MapConstructor[] = [
 		spawners: [
 			{
 				x: 11,
-				y: 14,
+				y: 17,
 				color: CarColor.RED,
 				rythm: 	40,
 				couldown: 1,
@@ -72,7 +72,7 @@ const LEVELS: MapConstructor[] = [
 
 			{
 				x: 11,
-				y: 12,
+				y: 16,
 				color: CarColor.YELLOW,
 				rythm: 	40,
 				couldown: 1,
@@ -85,14 +85,14 @@ const LEVELS: MapConstructor[] = [
 
 		roads: [
 			{
-				x: 13,
-				y: 7,
+				x: 17,
+				y: 14,
 				data: roadtypes.types.CONSUMER | (CarColor.RED << 3)
 			},
 
 			{
-				x: 13,
-				y: 6,
+				x: 19,
+				y: 14,
 				data: roadtypes.types.CONSUMER | (CarColor.YELLOW << 3)
 			}
 		]
