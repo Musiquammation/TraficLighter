@@ -83,6 +83,10 @@ export class GameHandler {
 			light_red: "assets/lights/red.png",
 			light_orange: "assets/lights/orange.png",
 			light_green: "assets/lights/green.png",
+			filter_front: "assets/filter/front.png",
+			filter_turn: "assets/filter/turn.png",
+			filter_share_front: "assets/filter/share-front.png",
+			filter_share_turn: "assets/filter/share-turn.png"
 		})
 
 		

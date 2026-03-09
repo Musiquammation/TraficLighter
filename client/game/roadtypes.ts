@@ -164,7 +164,28 @@ export namespace roadtypes {
 
 		case types.ALTERN:
 		{
-			drawImage('altern', ((road >> 6) & 0x3));
+			let path = (road & (1 << 5)) ? 'filter_share_' : 'filter_';
+			let flip = false;
+
+			switch ((road >> 3) & 0x3) {
+			case 0:
+			case 2:
+				path += 'front';
+				flip = false;
+				break;
+
+			case 1:
+				path += 'turn';
+				flip = false;
+				break;
+
+			case 3:
+				path += 'turn';
+				flip = true;
+				break;
+
+			} 
+			drawImage(path, ((road >> 6) & 0x3), {x: false, y: flip, color: -1});
 			break;
 		}
 
