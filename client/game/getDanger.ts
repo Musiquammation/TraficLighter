@@ -357,21 +357,21 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 
 				const road = explorer.getRoad();
 
-				const checkToLeft = () => {
+				const checkToLeft = (flags: number) => {
 					runCheck(
 						leftDir,
 						new GridExplorer(explorer),
 						checkDist+1,
-						forbiddenCarsFlag
+						flags
 					);
 				};
 
-				const checkToRight = () => {
+				const checkToRight = (flags: number) => {
 					runCheck(
 						rightDir,
 						new GridExplorer(explorer),
 						checkDist+1,
-						forbiddenCarsFlag
+						flags
 					);
 				};
 
@@ -385,41 +385,57 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 					break
 
 				case roadtypes.types.TURN:
+					const roadDir = (road >> 6);
+					if (roadDir === opDir) {
+						shouldBreak = true;
+						break;
+					}
+
+
 					const type = ((road >> 3) & 0x7) as roadtypes.TurnDirection;
 					switch (type) {
 					case roadtypes.TurnDirection.RIGHT:
-					{
-						const roadDir = (road >> 6);
-						if (roadDir === opDir) {
-							shouldBreak = true;
-							break;
-						}
-
-						if (roadDir === leftDir)
-							checkToLeft();
+						if (roadDir === rightDir)
+							checkToLeft(forbiddenCarsFlag);
 						
 						break;
-					}
+						
 						
 					case roadtypes.TurnDirection.LEFT:
-					{
-						const roadDir = (road >> 6);
-						if (roadDir === opDir) {
-							shouldBreak = true;
-							break;
-						}
-
-						if (roadDir === rightDir)
-							checkToRight();
+						if (roadDir === leftDir)
+							checkToRight(forbiddenCarsFlag);
 
 						break;
-					}
 
 
 					default:
 					{
-						/// TODO: here
-						// shouldBreak = true;
+						let leftFlag = forbiddenCarsFlag;
+						let rightFlag = forbiddenCarsFlag;
+						const arr = COLOR_TURNS[type - 2];
+
+						for (let i = 0; i < 8; i++) {
+							const flag = 1<<i;
+							switch (arr[i]) {
+							case 0: // front
+								leftFlag |= flag;
+								rightFlag |= flag;
+								break;
+
+							case 1: // left
+								forbiddenCarsFlag |= flag;
+								rightFlag |= flag;
+								break;
+
+							case 2: // right
+								forbiddenCarsFlag |= flag;
+								leftFlag |= flag;
+								break;
+							}
+
+							checkToLeft(leftFlag);
+							checkToRight(rightFlag);
+						}
 						break;
 					}
 					}
