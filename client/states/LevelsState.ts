@@ -21,7 +21,14 @@ export class LevelsState extends GameState {
 	}
 
 	enter(data: any, input: InputHandler): void {
-		
+		input.onMouseUp = e => {};
+		input.onMouseDown = e => {};
+		input.onMouseMove = e => {};
+		input.onScroll = e => {};
+		input.onTouchStart = e => {};
+		input.onTouchEnd = e => {};
+		input.onTouchMove = e => {};
+
 	}
 
 	frame(game: GameHandler): GameState | null {

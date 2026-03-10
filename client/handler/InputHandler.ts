@@ -51,6 +51,9 @@ export class InputHandler {
 	onMouseDown = (e: MouseEvent) => {};
 	onMouseMove = (e: MouseEvent) => {};
 	onScroll = (e: WheelEvent) => {};
+	onTouchStart = (e: TouchEvent) => {};
+	onTouchEnd = (e: TouchEvent) => {};
+	onTouchMove = (e: TouchEvent) => {};
 
 	static KEYBOARDS: Record<Mode, Record<string, Control>> = {
 		zqsd: {
@@ -213,19 +216,19 @@ export class InputHandler {
 	}
 
 	startMouseListeners(target: EventTarget) {
-		target.addEventListener('mouseup', (e) => {
+		target.addEventListener('mouseup', e => {
 			this.onMouseUp(e as MouseEvent);
 		});
 
-		target.addEventListener('mousedown', (e) => {
+		target.addEventListener('mousedown', e => {
 			this.onMouseDown(e as MouseEvent);
 		});
 
-		target.addEventListener('mousemove', (e) => {
+		target.addEventListener('mousemove', e => {
 			this.onMouseMove(e as MouseEvent);
 		});
 
-		target.addEventListener('wheel', (e) => {
+		target.addEventListener('wheel', e => {
 			const we = e as WheelEvent;
 			if (we.ctrlKey) {
 				we.preventDefault();
@@ -233,6 +236,18 @@ export class InputHandler {
 
 			this.onScroll(we);
 		}, {passive: false});
+
+		target.addEventListener('touchstart', e => {
+			this.onTouchStart(e as TouchEvent);
+		});
+
+		target.addEventListener('touchend', e => {
+			this.onTouchEnd(e as TouchEvent);
+		});
+		
+		target.addEventListener('touchmove', e => {
+			this.onTouchMove(e as TouchEvent);
+		});
 	}
 
 	removeListeners(target: EventTarget) {

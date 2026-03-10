@@ -210,11 +210,11 @@ export namespace roadtypes {
 	}
 
 
-	export function onRightClick(road: road_t): road_t {
+	export function onRotation(road: road_t): road_t | null {
 		switch (road & 0x7) {
 		case types.VOID:
 		case types.ROAD:
-			return road;
+			return null;
 
 		case types.TURN:
 		case types.PRIORITY:
@@ -230,17 +230,13 @@ export namespace roadtypes {
 
 
 		default:
-			return road;
+			return null;
 		}
 	}
 
 
 	export function onScroll(road: road_t, delta: number): road_t | 'light' | null {
 		switch (road & 0x7) {
-		case types.VOID:
-		case types.ROAD:
-			return null;
-
 		case types.TURN:
 		{
 			let type = (road >> 3) & 0x7;
@@ -260,11 +256,14 @@ export namespace roadtypes {
 			return road;
 		}
 
+		case types.ALTERN:
+			return road ^ (1<<5); // toggle share
+
 		case types.LIGHT:
 			return 'light';
 
 		default:
-			return types.VOID;
+			return null;
 		}
 	}
 }

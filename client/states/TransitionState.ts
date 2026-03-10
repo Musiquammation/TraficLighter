@@ -24,10 +24,13 @@ export class TransitionState extends GameState {
 		const score: number = data.score;
 		this.score = score;
 
-		input.onMouseUp = ()=>{};
-		input.onMouseDown = ()=>{ this.stop = true; };
-		input.onMouseMove = ()=>{};
-		input.onScroll = ()=>{};
+		input.onMouseUp = e => {};
+		input.onMouseDown = e => {};
+		input.onMouseMove = e => {};
+		input.onScroll = e => {};
+		input.onTouchStart = e => {};
+		input.onTouchEnd = e => {};
+		input.onTouchMove = e => {};
 	}
 
 	frame(game: GameHandler): GameState | null {

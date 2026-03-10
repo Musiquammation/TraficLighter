@@ -1,23 +1,20 @@
 import { GAME_HEIGHT, GAME_WIDTH } from "../handler/dimensions";
 import { GameHandler } from "../handler/GameHandler";
 import { DrawStateData, GameState } from "../handler/states";
-import { Vector2 } from "../handler/Vector2";
 import { Vector3 } from "../handler/Vector3";
-import { Car } from "./Car";
 import { Chunk } from "./Chunk";
 import { ChunkMap } from "./ChunkMap";
 import { roadtypes } from "./roadtypes";
 import { Direction, getDirectionDelta, rotateDirectionToLeft, rotateDirectionToRight } from "./Direction";
 import { InputHandler } from "../handler/InputHandler";
 import { ImageLoader } from "../handler/ImageLoader";
-import { CarColor } from "./CarColor";
-import { PathGraph } from "./PathGraph";
 import { modulo } from "./modulo";
 import { lightSizeEditor } from "./LightSizeEditor";
 import { TransitionState } from "../states/TransitionState";
 import { MapConstructor } from "./MapConstructor";
 import { PauseElement } from "../handler/PauseElement";
 import { GridExplorer } from "./GridExplorer";
+import { HandSelection, handSelector } from "./HandSelector";
 
 
 const timeLeftDiv = document.getElementById("timeLeft")!;
@@ -32,9 +29,7 @@ const LIGHT_TICK = 45;
 export class Game extends GameState {
 	private camera: Vector3 = {x: 0, y: 0, z: 20};
 
-
 	chunkMap = new ChunkMap();
-	private graph = new PathGraph(this.chunkMap);
 	private carFrame = 0;
 	private runningCars = false;
 	private score = 0;
@@ -167,6 +162,7 @@ export class Game extends GameState {
 		this.lightTickCouldown = 0;
 
 		(document.getElementById("pause") as PauseElement|null)?.togglePause(false);
+		lightTurnDiv.textContent = this.lightTick.toString().padStart(2, '0');
 	}
 
 	private handleHTML() {
@@ -205,24 +201,113 @@ export class Game extends GameState {
 			this.lastMouseY = y;
 		}
 
-		input.onMouseUp = e => {
-			const {x,y} = this.getMousePosition(e.clientX, e.clientY);
-			this.lastMouseX = x;
-			this.lastMouseY = y;
+		const runMode = (
+			smode: HandSelection,
+			x: number, y: number,
+			moving: boolean
+		) => {
+			let roadtype: roadtypes.types | null = null;
+
+			if (
+				moving &&
+				Math.floor(this.lastMouseX) === Math.floor(x) &&
+				Math.floor(this.lastMouseY) === Math.floor(y)
+			) {
+				return;
+			}
+
+			switch (smode) {
+			case HandSelection.NONE:
+				break;
+
+			case HandSelection.ERASE:
+				this.chunkMap.setRoad(x, y, roadtypes.types.VOID);
+				break;
+
+			case HandSelection.ROAD:
+				this.placeRoad(x, y);
+				break;
+
+			case HandSelection.ROTATE:
+			{
+				const road = roadtypes.onRotation(
+					this.chunkMap.getRoad(x, y));
+
+				if (road !== null) {
+					this.chunkMap.setRoad(x, y, road);
+				}
+
+				break;
+			}
+
+			case HandSelection.TURN:
+				roadtype = roadtypes.types.TURN;
+				break;
+
+			case HandSelection.PRIORITY:
+				roadtype = roadtypes.types.PRIORITY;
+				break;
+
+			case HandSelection.LIGHT:
+				roadtype = roadtypes.types.LIGHT;
+				break;
+
+			case HandSelection.ALTERN:
+				roadtype = roadtypes.types.ALTERN;
+				break;
+
+			}
+
+			if (roadtype !== null) {
+				const road = this.chunkMap.getRoad(x, y);
+				if ((road & 0x7) === roadtype) {
+					const next = roadtypes.onScroll(road, -1);
+					if (next === null) {
+						const rotated = roadtypes.onRotation(road);
+
+						if (rotated !== null) {
+							this.chunkMap.setRoad(x, y, rotated);
+						}
+
+					} else if (next === 'light') {
+						this.setLight(x, y, road);
+						
+					} else {
+						this.chunkMap.setRoad(x, y, next);
+					}
+				} else {
+					this.chunkMap.setRoad(x, y, roadtype);
+				}
+			}
+
 			updateMouse(x, y);
 		};
-		
-		input.onMouseDown = e => {
-			const {x,y} = this.getMousePosition(e.clientX, e.clientY);
-			this.lastMouseX = x;
-			this.lastMouseY = y;
 
-			const leftDown   = (e.buttons & 1) !== 0;
-			const rightDown  = (e.buttons & 2) !== 0;
-			const middleDown = (e.buttons & 4) !== 0;
+		const mouseUp = (clientX: number, clientY: number) => {
+			const {x,y} = this.getMousePosition(clientX, clientY);
+			updateMouse(x, y);
+		}
+
+		const mouseDown = (
+			clientX: number,
+			clientY: number,
+			buttons: number,
+			shiftKey: boolean
+		) => {
+			const {x,y} = this.getMousePosition(clientX, clientY);
+
+			const smode = handSelector.getMode();
+			if (smode) {
+				runMode(smode, x, y, false);
+				return;
+			}
+
+			const leftDown   = (buttons & 1) !== 0;
+			const rightDown  = (buttons & 2) !== 0;
+			const middleDown = (buttons & 4) !== 0;
 
 			if (leftDown) {
-				if (e.shiftKey) {
+				if (shiftKey) {
 					this.chunkMap.setRoad(x, y, roadtypes.types.VOID);
 				} else {
 					this.placeRoad(x, y);
@@ -230,32 +315,48 @@ export class Game extends GameState {
 			}
 
 			if (rightDown) {
-				this.chunkMap.setRoad(x, y,
-					roadtypes.onRightClick(this.chunkMap.getRoad(x, y)));
+				const newRoad = roadtypes.onRotation(
+					this.chunkMap.getRoad(x, y));
+
+				if (newRoad !== null)
+					this.chunkMap.setRoad(x, y, newRoad);
 
 			}
 
 			updateMouse(x, y);
-		};
+		}
 		
-		input.onMouseMove = e => {
-			let {x,y} = this.getMousePosition(e.clientX, e.clientY);
-			
-			const leftDown   = (e.buttons & 1) !== 0;
-			const rightDown  = (e.buttons & 2) !== 0;
-			const middleDown = (e.buttons & 4) !== 0;
+		const mouseMove = (
+			clientX: number,
+			clientY: number,
+			buttons: number,
+			shiftKey: boolean
+		) => {
+			let {x,y} = this.getMousePosition(clientX, clientY);
+						
+			const leftDown   = (buttons & 1) !== 0;
+			const rightDown  = (buttons & 2) !== 0;
+			const middleDown = (buttons & 4) !== 0;
 
 			if (middleDown) {
 				this.camera.x += this.lastMouseX - x;
 				this.camera.y += this.lastMouseY - y;
 
-				const c = this.getMousePosition(e.clientX, e.clientY);
+				const c = this.getMousePosition(clientX, clientY);
 				x = c.x;
 				y = c.y;
 			}
 
+
+
+			const smode = handSelector.getMode();
+			if (smode && leftDown) {
+				runMode(smode, x, y, true);
+				return;
+			}
+
 			if (leftDown) {
-				if (e.shiftKey) {
+				if (shiftKey) {
 					this.chunkMap.setRoad(x, y, roadtypes.types.VOID);
 				} else {
 					this.placeRoad(x, y);
@@ -263,10 +364,16 @@ export class Game extends GameState {
 			}
 
 
-			this.lastMouseX = x;
-			this.lastMouseY = y;
 			updateMouse(x, y);
 		};
+
+		input.onMouseUp = e => mouseUp(e.clientX, e.clientY);
+		input.onMouseDown = e => mouseDown(e.clientX, e.clientY, e.buttons, e.shiftKey);
+		input.onMouseMove = e => mouseMove(e.clientX, e.clientY, e.buttons, e.shiftKey);
+
+		input.onTouchMove = e =>
+			mouseMove(e.touches[0].clientX, e.touches[0].clientY, 1, false);
+		
 
 		input.onScroll = e => {
 			let {x,y} = this.getMousePosition(e.clientX, e.clientY);
@@ -289,18 +396,7 @@ export class Game extends GameState {
 
 			const roadScroll = roadtypes.onScroll(road, e.deltaY);
 			if (roadScroll === 'light') {
-				const light = this.chunkMap.getLight(x, y);
-				if (light) {
-					lightSizeEditor.get(light.flag, (road >> 4) & 0x3).then(o => {
-						light.flag = o.flag;
-
-						let nextRoad = roadtypes.types.LIGHT;
-						nextRoad |= road & (3<<6); // direction
-						nextRoad |= o.cycleSize << 4;
-						this.chunkMap.setRoad(x, y, nextRoad);
-					});
-					
-				}
+				this.setLight(x, y, road);
 
 			} else if (roadScroll) {
 				this.chunkMap.setRoad(x, y, roadScroll);
@@ -402,11 +498,11 @@ export class Game extends GameState {
 		this.placeKeyboardRoads(game.inputHandler);
 
 		for (let i = 0; i < times; i++) {
-			this.runLightTicks();
-
 			if (this.runningCars) {
+				this.runLightTicks();
+
 				for (let [_, chunk] of this.chunkMap) {
-					chunk.runEvents(this.carFrame);
+					chunk.runEvents(this.lightTick);
 				}
 
 				this.runCars();
@@ -419,6 +515,21 @@ export class Game extends GameState {
 		return null;
 	}
 
+
+	private setLight(x: number, y: number, road: roadtypes.road_t) {
+		const light = this.chunkMap.getLight(x, y);
+		if (light) {
+			lightSizeEditor.get(light.flag, (road >> 4) & 0x3).then(o => {
+				light.flag = o.flag;
+
+				let nextRoad = roadtypes.types.LIGHT;
+				nextRoad |= road & (3<<6); // direction
+				nextRoad |= o.cycleSize << 4;
+				this.chunkMap.setRoad(x, y, nextRoad);
+			});
+			
+		}
+	}
 
 
 	private drawGrid(ctx: CanvasRenderingContext2D, iloader: ImageLoader) {

@@ -4,6 +4,7 @@ import { PauseElement } from "./PauseElement";
 import {InputHandler} from "./InputHandler";
 import { ImageLoader } from "./ImageLoader";
 import { LevelsState } from "../states/LevelsState";
+import { HAND_SELECTION_ICONS, HandSelection, handSelector } from "../game/HandSelector";
 
 declare global {
 	interface Window {
@@ -67,7 +68,6 @@ export class GameHandler {
 				this.imgLoader.get('restart'),
 				document.getElementById("restart")!
 			);
-			
 		});
 
 		// Load game assets
@@ -86,8 +86,25 @@ export class GameHandler {
 			filter_front: "assets/filter/front.png",
 			filter_turn: "assets/filter/turn.png",
 			filter_share_front: "assets/filter/share-front.png",
-			filter_share_turn: "assets/filter/share-turn.png"
-		})
+			filter_share_turn: "assets/filter/share-turn.png",
+			icon_none: "assets/icons/none.png",
+			icon_erase: "assets/icons/erase.png",
+			icon_road: "assets/icons/road.png",
+			icon_rotate: "assets/icons/rotate.png",
+		}).then(() => {
+
+			// Place hand panel
+			for (const i of Object.values(HandSelection)) {
+				if (typeof i !== "number") {
+					continue;
+				}
+
+				setElementAsBackground(
+					this.imgLoader.get(HAND_SELECTION_ICONS[i]),
+					handSelector.getDiv(i) as HTMLElement
+				);
+			}
+		});
 
 		
 

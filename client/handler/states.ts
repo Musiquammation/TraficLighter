@@ -26,6 +26,9 @@ export namespace states {
 			input.onMouseDown = e => {};
 			input.onMouseMove = e => {};
 			input.onScroll = e => {};
+			input.onTouchStart = e => {};
+			input.onTouchEnd = e => {};
+			input.onTouchMove = e => {};
 		}
 
 		frame(game: GameHandler): GameState | null {
