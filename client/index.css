@@ -1,3 +1,4 @@
+
 body, html {
 	margin: 0;
 	padding: 0;
@@ -102,6 +103,9 @@ canvas {
 	padding: 10px;
 }
 
+
+
+
 #handPanel {
 	--cellSize: 48px;
 
@@ -130,15 +134,39 @@ canvas {
 #handPanel > div {
 	width: var(--cellSize);
 	height: var(--cellSize);
-	flex: 0 0 auto;
 	border-radius: 4px;
+	background-color: gold;
+	flex: 0 0 auto;
+	cursor: pointer;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+#handPanel > div > div {
+	width: 100%;
+	height: 100%;
+	border-radius: 4px;
+
 	background-color: black;
-	background: no-repeat;
+	background-repeat: no-repeat;
 	background-size: cover;
 	background-position: center;
+
 	image-rendering: pixelated;
-	transform: translateZ(0) rotate(-90deg);
+
+	transform: translateZ(0) rotate(-90deg) scale(1);
+	transform-origin: center;
+
+	transition: transform 0.25s ease;
+	will-change: transform;
 }
+
+#handPanel > div.selected > div {
+	transform: translateZ(0) rotate(-90deg) scale(0.83);
+}
+
 
 
 

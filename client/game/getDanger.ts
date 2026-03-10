@@ -217,7 +217,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 		case roadtypes.types.LIGHT:
 			if (dist <= 0)
 				break;
-			
+
 			checkRight = true;
 			if (
 				(road >> 6) === car.direction
@@ -229,6 +229,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 			
 			break;
 
+			
 		case roadtypes.types.ALTERN:
 			if (dist > 0) {checkRight = true;}
 

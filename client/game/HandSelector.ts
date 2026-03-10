@@ -1,3 +1,4 @@
+
 export enum HandSelection {
 	NONE,
 	ROAD,
@@ -34,10 +35,13 @@ class HandSelector {
 
 
 	getDiv(idx: HandSelection) {
-		return this.panelDiv.children[idx];
+		return this.panelDiv.children[idx].children[0];
 	}
 
 	private setMode(idx: HandSelection) {
+		this.panelDiv.children[this.currentMode].classList.remove('selected');
+		this.panelDiv.children[idx].classList.add('selected');
+		
 		this.currentMode = idx;
 	}
 
@@ -49,12 +53,17 @@ class HandSelector {
 		const length = Object.values(HandSelection).length/2;
 		for (let i = 0; i < length; i++) {
 			const div = document.createElement("div");
+			
+			const subDiv = document.createElement("div");
+			div.appendChild(subDiv);
 			this.panelDiv.appendChild(div);
 
 			const idx = i;
 			div.addEventListener('click', () => this.setMode(idx));
 			div.addEventListener('touchstart', () => this.setMode(idx));
 		}
+
+		this.panelDiv.children[0].classList.add('selected');
 	}
 
 
