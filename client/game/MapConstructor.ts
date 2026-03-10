@@ -40,6 +40,8 @@ export class MapConstructor {
 
 	fill(cmap: ChunkMap) {
 		cmap.time = this.time;
+		cmap.gameArea.x = Math.ceil(this.width/Chunk.SIZE);
+		cmap.gameArea.y = Math.ceil(this.height/Chunk.SIZE);
 
 		for (let i = 0; i < this.carSpawners.length; i++) {
 			const spawner = this.carSpawners[i];

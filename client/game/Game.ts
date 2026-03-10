@@ -472,6 +472,12 @@ export class Game extends GameState {
 
 			this.chunkMap.setRoad(x, y, road);
 
+		} else if (input.first('light')) {
+			const road = roadtypes.types.LIGHT | 
+				(current & (3<<6));
+
+			this.chunkMap.setRoad(x, y, road);
+
 		} else if (input.first('altern')) {
 			const road = roadtypes.types.ALTERN | 
 				(current & (3<<6));
@@ -536,7 +542,11 @@ export class Game extends GameState {
 		for (let [_, chunk] of this.chunkMap) {
 			ctx.save();
 			ctx.translate(chunk.x * Chunk.SIZE, chunk.y * Chunk.SIZE);
-			chunk.drawGrid(ctx, iloader);
+			const drawBackground = (
+				chunk.x >= 0 && chunk.x < this.chunkMap.gameArea.x &&
+				chunk.y >= 0 && chunk.y < this.chunkMap.gameArea.y
+			);
+			chunk.drawGrid(ctx, iloader, drawBackground);
 			ctx.restore();
 		}
 	}

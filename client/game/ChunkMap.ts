@@ -3,6 +3,7 @@ import { Chunk } from "./Chunk";
 import { roadtypes } from "./roadtypes";
 import { Direction, getCellDist, getDirectionDelta, opposeDirection, rotateDirectionToLeft, rotateDirectionToRight } from "./Direction";
 import { modulo } from "./modulo";
+import { Vector2 } from "../handler/Vector2";
 
 
 function produceChunkKey(x: number, y: number) {
@@ -22,6 +23,7 @@ export class ChunkMap {
 	}
 
 	private chunks = new Map<number, Chunk>();
+	gameArea: Vector2 = {x: 0, y: 0};
 	time = 0;
 
 

@@ -88,10 +88,12 @@ export class Chunk {
 	}
 
 
-	drawGrid(ctx: CanvasRenderingContext2D, iloader: ImageLoader) {
+	drawGrid(ctx: CanvasRenderingContext2D, iloader: ImageLoader, drawBackground: boolean) {
 		// Background
-		ctx.fillStyle = "white";
-		ctx.fillRect(0, 0, Chunk.SIZE, Chunk.SIZE);
+		if (drawBackground) {
+			ctx.fillStyle = "white";
+			ctx.fillRect(0, 0, Chunk.SIZE, Chunk.SIZE);
+		}
 
 		// Draw roads
 		for (let y = 0; y < Chunk.SIZE; y++) {
