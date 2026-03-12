@@ -41,7 +41,7 @@ export class LevelsState extends GameState {
 
 	exit() {
 		if (window.DEBUG) {
-			return LEVELS[0];
+			return LEVELS[8];
 			
 		} else {
 			const v = prompt("Level? [1, 2, 3 or 4]");
@@ -57,6 +57,25 @@ export class LevelsState extends GameState {
 	}
 }
 
+
+
+function b(x: number, y: number) {
+	return {x, y, data: 8};
+}
+
+function c(x: number, y: number, color: CarColor) {
+	return {x, y, data: roadtypes.types.CONSUMER | (color << 3)};
+}
+
+function rect(x: number, y: number, w: number, h: number) {
+	const arr = [];
+	for (let i = x; i < x + w; i++) {
+		for (let j = y; j < y + h; j++) {
+			arr.push(b(i, j));
+		}
+	}
+	return arr;
+}
 
 
 const LEVELS: MapConstructor[] = [
@@ -91,17 +110,8 @@ const LEVELS: MapConstructor[] = [
 		],
 
 		roads: [
-			{
-				x: 17,
-				y: 14,
-				data: roadtypes.types.CONSUMER | (CarColor.RED << 3)
-			},
-
-			{
-				x: 19,
-				y: 14,
-				data: roadtypes.types.CONSUMER | (CarColor.YELLOW << 3)
-			}
+			c(17, 14, CarColor.RED),
+			c(19, 14, CarColor.YELLOW),
 		]
 	}),
 
@@ -145,23 +155,11 @@ const LEVELS: MapConstructor[] = [
 			}
 		],
 		roads: [
-			{
-				x: 30,
-				y: 5,
-				data: roadtypes.types.CONSUMER | (CarColor.RED << 3)
-			},
+			c(30, 5, CarColor.RED),
 
-			{
-				x: 20,
-				y: 1,
-				data: roadtypes.types.CONSUMER | (CarColor.CYAN << 3)
-			},
+			c(20, 1, CarColor.CYAN),
 
-			{
-				x: 30,
-				y: 10,
-				data: roadtypes.types.CONSUMER | (CarColor.BLUE << 3)
-			}
+			c(30, 10, CarColor.BLUE),
 		]
 	}),
 
@@ -205,23 +203,11 @@ const LEVELS: MapConstructor[] = [
 			},
 		],
 		roads: [
-			{
-				x: 30,
-				y: 5,
-				data: roadtypes.types.CONSUMER | (CarColor.BLUE << 3)
-			},
+			c(30, 5, CarColor.BLUE),
 
-			{
-				x: 20,
-				y: 1,
-				data: roadtypes.types.CONSUMER | (CarColor.CYAN << 3)
-			},
+			c(20, 1, CarColor.CYAN),
 
-			{
-				x: 30,
-				y: 10,
-				data: roadtypes.types.CONSUMER | (CarColor.RED << 3)
-			}
+			c(30, 10, CarColor.RED),
 		]
 	}),
 
@@ -324,23 +310,11 @@ const LEVELS: MapConstructor[] = [
 
 			
 		roads: [
-			{
-				x: 30,
-				y: 20,
-				data: roadtypes.types.CONSUMER | (CarColor.CYAN << 3)
-			},
+			c(30, 20, CarColor.CYAN),
 
-			{
-				x: 20,
-				y: 30,
-				data: roadtypes.types.CONSUMER | (CarColor.BLUE << 3)
-			},
+			c(20, 30, CarColor.BLUE),
 
-			{
-				x: 27,
-				y: 27,
-				data: roadtypes.types.CONSUMER | (CarColor.RED << 3)
-			}
+			c(27, 27, CarColor.RED),
 		]
 	}),
 
@@ -465,36 +439,36 @@ const LEVELS: MapConstructor[] = [
 
 			
 		roads: [
-			{x: 16, y: 0, data: 8},{x: 16, y: 1, data: 8},{x: 16, y: 2, data: 8},{x: 16, y: 3, data: 8},
-			{x: 16, y: 4, data: 8},{x: 16, y: 5, data: 8},{x: 16, y: 6, data: 8},{x: 16, y: 7, data: 8},
-			{x: 16, y: 8, data: 8},{x: 16, y: 9, data: 8},{x: 16, y: 10, data: 8},{x: 16, y: 11, data: 8},
-			{x: 16, y: 12, data: 8},{x: 16, y: 13, data: 8},{x: 16, y: 14, data: 8},
-			{x: 16, y: 19, data: 8},{x: 16, y: 20, data: 8},{x: 16, y: 21, data: 8},
-			{x: 16, y: 22, data: 8},{x: 16, y: 23, data: 8},{x: 16, y: 24, data: 8},{x: 16, y: 25, data: 8},
-			{x: 16, y: 26, data: 8},{x: 16, y: 27, data: 8},{x: 16, y: 28, data: 8},{x: 16, y: 29, data: 8},
-			{x: 16, y: 30, data: 8},{x: 16, y: 31, data: 8},
+			b(16, 0), b(16, 1), b(16, 2), b(16, 3), 
+			b(16, 4), b(16, 5), b(16, 6), b(16, 7), 
+			b(16, 8), b(16, 9), b(16, 10), b(16, 11), 
+			b(16, 12), b(16, 13), b(16, 14), 
+			b(16, 19), b(16, 20), b(16, 21), 
+			b(16, 22), b(16, 23), b(16, 24), b(16, 25), 
+			b(16, 26), b(16, 27), b(16, 28), b(16, 29), 
+			b(16, 30), b(16, 31), 
 			
-			{x: 17, y: 0, data: 8},{x: 17, y: 1, data: 8},{x: 17, y: 2, data: 8},{x: 17, y: 3, data: 8},
-			{x: 17, y: 4, data: 8},{x: 17, y: 5, data: 8},{x: 17, y: 6, data: 8},{x: 17, y: 7, data: 8},
-			{x: 17, y: 8, data: 8},{x: 17, y: 9, data: 8},{x: 17, y: 10, data: 8},{x: 17, y: 11, data: 8},
-			{x: 17, y: 12, data: 8},{x: 17, y: 13, data: 8},{x: 17, y: 14, data: 8},
-			{x: 17, y: 19, data: 8},{x: 17, y: 20, data: 8},{x: 17, y: 21, data: 8},
-			{x: 17, y: 22, data: 8},{x: 17, y: 23, data: 8},{x: 17, y: 24, data: 8},{x: 17, y: 25, data: 8},
-			{x: 17, y: 26, data: 8},{x: 17, y: 27, data: 8},{x: 17, y: 28, data: 8},{x: 17, y: 29, data: 8},
-			{x: 17, y: 30, data: 8},{x: 17, y: 31, data: 8},
+			b(17, 0), b(17, 1), b(17, 2), b(17, 3), 
+			b(17, 4), b(17, 5), b(17, 6), b(17, 7), 
+			b(17, 8), b(17, 9), b(17, 10), b(17, 11), 
+			b(17, 12), b(17, 13), b(17, 14), 
+			b(17, 19), b(17, 20), b(17, 21), 
+			b(17, 22), b(17, 23), b(17, 24), b(17, 25), 
+			b(17, 26), b(17, 27), b(17, 28), b(17, 29), 
+			b(17, 30), b(17, 31), 
 
 
-			{x: 28, y: 2, data: roadtypes.types.CONSUMER | (CarColor.RED << 3)},
-			{x: 28, y: 9, data: roadtypes.types.CONSUMER | (CarColor.YELLOW << 3)},
-			{x: 28, y: 23, data: roadtypes.types.CONSUMER | (CarColor.BLUE << 3)},
-			{x: 28, y: 30, data: roadtypes.types.CONSUMER | (CarColor.CYAN << 3)},
-			{x: 1, y: 17, data: roadtypes.types.CONSUMER | (CarColor.PINK << 3)},
+			c(28, 2, CarColor.RED),
+			c(28, 9, CarColor.YELLOW),
+			c(28, 23, CarColor.BLUE),
+			c(28, 30, CarColor.CYAN),
+			c(1, 17, CarColor.PINK),
 		]
 	}),
 
 	// Level 5
 	new MapConstructor({
-		time: (599.9)*60,
+		time: 150*60,
 		width: 31,
 		height: 31,
 		spawners: [
@@ -629,18 +603,352 @@ const LEVELS: MapConstructor[] = [
 		],
 
 		roads: [
-			{x: 30, y: 16, data: roadtypes.types.CONSUMER | (CarColor.RED << 3)},
-			{x: 30, y: 17, data: roadtypes.types.CONSUMER | (CarColor.RED << 3)},
-			{x:  1, y: 14, data: roadtypes.types.CONSUMER | (CarColor.YELLOW << 3)},
-			{x:  1, y: 15, data: roadtypes.types.CONSUMER | (CarColor.YELLOW << 3)},
-			{x: 14, y: 30, data: roadtypes.types.CONSUMER | (CarColor.BLUE << 3)},
-			{x: 15, y: 30, data: roadtypes.types.CONSUMER | (CarColor.BLUE << 3)},
-			{x: 16, y:  1, data: roadtypes.types.CONSUMER | (CarColor.GREEN << 3)},
-			{x: 17, y:  1, data: roadtypes.types.CONSUMER | (CarColor.GREEN << 3)},
+			c(30, 16, CarColor.RED),
+			c(30, 17, CarColor.RED),
+			c( 1, 14, CarColor.YELLOW),
+			c( 1, 15, CarColor.YELLOW),
+			c(14, 30, CarColor.BLUE),
+			c(15, 30, CarColor.BLUE),
+			c(16,  1, CarColor.GREEN),
+			c(17,  1, CarColor.GREEN),
 
-			{x: 29, y: 29, data: roadtypes.types.CONSUMER | (CarColor.PINK << 3)},
-			{x: 29, y:  2, data: roadtypes.types.CONSUMER | (CarColor.CYAN << 3)},
-			{x:  2, y: 29, data: roadtypes.types.CONSUMER | (CarColor.WHITE << 3)},
+			c(29, 29, CarColor.PINK),
+			c(29,  2, CarColor.CYAN),
+			c( 2, 29, CarColor.WHITE),
+		]
+	}),
+
+
+	// Level 6
+	new MapConstructor({
+		time: 200*60,
+		width: 31,
+		height: 31,
+		spawners: [
+			// Top left
+			{
+				x: 1,
+				y: 3,
+				color: CarColor.RED,
+				rythm: 25,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 1,
+				y: 5,
+				color: CarColor.YELLOW,
+				rythm: 25,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 1
+			},
+
+			// Bottom left
+			{
+				x: 5,
+				y: 30,
+				color: CarColor.BLUE,
+				rythm: 25,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 3,
+				y: 30,
+				color: CarColor.YELLOW,
+				rythm: 25,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+			
+			// Bottom right
+			{
+				x: 30,
+				y: 28,
+				color: CarColor.BLUE,
+				rythm: 25,
+				couldown: 1,
+				direction: Direction.LEFT,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 30,
+				y: 26,
+				color: CarColor.GREEN,
+				rythm: 25,
+				couldown: 1,
+				direction: Direction.LEFT,
+				count: Infinity,
+				score: 1
+			},
+
+			// Top right
+			{
+				x: 28,
+				y: 1,
+				color: CarColor.GREEN,
+				rythm: 25,
+				couldown: 1,
+				direction: Direction.DOWN,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 26,
+				y: 1,
+				color: CarColor.RED,
+				rythm: 25,
+				couldown: 1,
+				direction: Direction.DOWN,
+				count: Infinity,
+				score: 1
+			},
+
+		],
+
+		roads: [
+			...rect(15, 1, 2, 10),
+			...rect(15, 21, 2, 10),
+			...rect(1, 15, 10, 2),
+			...rect(21, 15, 10, 2),
+
+			...rect(13, 13, 6, 6),
+
+
+			c(3, 1, CarColor.GREEN),
+			c(5, 1, CarColor.BLUE),
+			c(1, 26, CarColor.GREEN),
+			c(1, 28, CarColor.RED),
+			c(26, 30, CarColor.RED),
+			c(28, 30, CarColor.YELLOW),
+			c(30, 3, CarColor.BLUE),
+			c(30, 5, CarColor.YELLOW),
+
+		]
+	}),
+
+	// Level 7
+	new MapConstructor({
+		time: 100*60,
+		width: 31,
+		height: 31,
+		spawners: [
+			// Bottom line
+			{
+				x: 21,
+				y: 30,
+				color: CarColor.RED,
+				rythm: 20,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 23,
+				y: 30,
+				color: CarColor.YELLOW,
+				rythm: 60,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 7
+			},
+
+			{
+				x: 24,
+				y: 30,
+				color: CarColor.RED,
+				rythm: 20,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 22,
+				y: 29,
+				color: CarColor.WHITE,
+				rythm: 40,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 3
+			},
+
+			{
+				x: 30,
+				y: 10,
+				color: CarColor.PINK,
+				rythm: 90,
+				couldown: 1,
+				direction: Direction.LEFT,
+				count: Infinity,
+				score: 20
+			},
+		],
+
+		roads: [
+			c(23, 1, CarColor.RED),
+			c(24, 1, CarColor.WHITE),
+			c(25, 1, CarColor.RED),
+			c(1, 10, CarColor.PINK),
+			c(1, 9, CarColor.YELLOW),
+		]
+	}),
+
+	// Level 8
+	new MapConstructor({
+		time: 200*60,
+		width: 31,
+		height: 31,
+		spawners: [
+			// Right side
+			{
+				x: 7,
+				y: 1,
+				color: CarColor.BLUE,
+				rythm: 20,
+				couldown: 1,
+				direction: Direction.DOWN,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 8,
+				y: 1,
+				color: CarColor.GREEN,
+				rythm: 60,
+				couldown: 1,
+				direction: Direction.DOWN,
+				count: Infinity,
+				score: 7
+			},
+
+			{
+				x: 10,
+				y: 1,
+				color: CarColor.BLUE,
+				rythm: 20,
+				couldown: 1,
+				direction: Direction.DOWN,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 9,
+				y: 2,
+				color: CarColor.GRAY,
+				rythm: 40,
+				couldown: 1,
+				direction: Direction.LEFT,
+				count: Infinity,
+				score: 3
+			},
+
+			{
+				x: 1,
+				y: 21,
+				color: CarColor.CYAN,
+				rythm: 90,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 20
+			},
+
+
+
+			// Right side
+			{
+				x: 21,
+				y: 30,
+				color: CarColor.RED,
+				rythm: 20,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 23,
+				y: 30,
+				color: CarColor.YELLOW,
+				rythm: 60,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 7
+			},
+
+			{
+				x: 24,
+				y: 30,
+				color: CarColor.RED,
+				rythm: 20,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 22,
+				y: 29,
+				color: CarColor.WHITE,
+				rythm: 40,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 3
+			},
+
+			{
+				x: 30,
+				y: 10,
+				color: CarColor.PINK,
+				rythm: 90,
+				couldown: 1,
+				direction: Direction.LEFT,
+				count: Infinity,
+				score: 20
+			},
+		],
+
+		roads: [
+			// Left side
+			c(6, 30, CarColor.BLUE),
+			c(7, 30, CarColor.GRAY),
+			c(8, 30, CarColor.BLUE),
+			c(30, 21, CarColor.CYAN),
+			c(30, 22, CarColor.GREEN),
+
+			// Right side
+			c(23, 1, CarColor.RED),
+			c(24, 1, CarColor.WHITE),
+			c(25, 1, CarColor.RED),
+			c(1, 10, CarColor.PINK),
+			c(1, 9, CarColor.YELLOW),
 		]
 	})
+
 ];
+

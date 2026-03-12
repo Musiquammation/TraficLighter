@@ -66,7 +66,14 @@ class HandSelector {
 		this.panelDiv.children[0].classList.add('selected');
 	}
 
-
+	showPanel() {
+		this.panelDiv.classList.remove('hidden');
+	}
+	
+	hidePanel() {
+		this.panelDiv.classList.add('hidden');
+		this.setMode(HandSelection.NONE);
+	}
 }
 
 

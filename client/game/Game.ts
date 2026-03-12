@@ -1,4 +1,5 @@
 import { GAME_HEIGHT, GAME_WIDTH } from "../handler/dimensions";
+import { isTouchDevice } from "../handler/isTouchDevice";
 import { GameHandler } from "../handler/GameHandler";
 import { DrawStateData, GameState } from "../handler/states";
 import { Vector3 } from "../handler/Vector3";
@@ -405,6 +406,15 @@ export class Game extends GameState {
 			}
 
 			updateMouse(x, y);
+		}
+
+
+
+		// Handle handPanel
+		if (isTouchDevice()) {
+			handSelector.showPanel();
+		} else {
+			handSelector.hidePanel();
 		}
 
 	}

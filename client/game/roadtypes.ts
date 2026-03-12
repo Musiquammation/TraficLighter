@@ -184,8 +184,9 @@ export namespace roadtypes {
 				flip = true;
 				break;
 
-			} 
-			drawImage(path, ((road >> 6) & 0x3), {x: false, y: flip, color: -1});
+			}
+			const direction: Direction = (road >> 6) & 0x3;
+			drawImage(path, direction * Math.PI/2, {x: false, y: flip, color: -1});
 			break;
 		}
 
@@ -212,13 +213,10 @@ export namespace roadtypes {
 
 	export function onRotation(road: road_t): road_t | null {
 		switch (road & 0x7) {
-		case types.VOID:
-		case types.ROAD:
-			return null;
-
 		case types.TURN:
 		case types.PRIORITY:
 		case types.LIGHT:
+		case types.ALTERN:
 		{
 			let dir = (road >> 6) & 0x3;
 			dir++;
