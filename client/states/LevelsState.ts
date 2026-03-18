@@ -122,7 +122,7 @@ const LEVELS: MapConstructor[] = [
 			c(23, 1, CarColor.RED),
 			c(24, 1, CarColor.WHITE),
 			c(25, 1, CarColor.RED),
-			c(1, 10, CarColor.PINK),
+			c(6, 7, CarColor.PINK),
 			c(1, 9, CarColor.YELLOW),
 		]
 	}),

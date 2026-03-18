@@ -449,7 +449,10 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 					
 
 				case roadtypes.types.SPAWNER:
+					break;
+
 				case roadtypes.types.CONSUMER:
+					forbiddenCarsFlag |= 1>>(road << 3);
 					break;
 
 				case roadtypes.types.PRIORITY:
