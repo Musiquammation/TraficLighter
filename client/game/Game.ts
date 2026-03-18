@@ -510,6 +510,8 @@ export class Game extends GameState {
 	}
 
 	frame(game: GameHandler) {
+		(window as any).fastView = game.inputHandler.first('fastView');
+
 		let times = game.inputHandler.press('fastView') ? FAST_TIMES : 1;
 		this.placeKeyboardRoads(game.inputHandler);
 
@@ -522,6 +524,7 @@ export class Game extends GameState {
 				}
 
 				this.runCars();
+				(window as any).fastView = false;
 			}
 	
 			if (this.carFrame >= this.chunkMap.time)

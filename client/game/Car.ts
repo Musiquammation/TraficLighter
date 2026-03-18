@@ -30,7 +30,7 @@ export class Car {
 	frameLastPositionUpdate = -1;
 	alive = true;
 	
-	id = nextCarId++;
+	readonly id = nextCarId++;
 	
 	x: number;
 	y: number;

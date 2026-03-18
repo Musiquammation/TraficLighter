@@ -141,8 +141,6 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 	// Check cars in front
 	for (let dist = 0; dist < range; dist++) {
 		const road = pos.getRoad();
-
-
 		const checkDir = new DirHelper(dir);
 		let finish = false;
 		let checkLeft = willCheckPriorities;
@@ -197,7 +195,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 		}
 
 		case roadtypes.types.PRIORITY:
-			if ((road >> 6) !== car.direction)
+			if ((road >> 6) !== dir.dir)
 				break;
 
 			if (dist > 0) {
@@ -220,7 +218,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 
 			checkRight = true;
 			if (
-				(road >> 6) === car.direction
+				(road >> 6) === dir.dir
 				&& (road & (1<<3)) === 0
 				&& (dist > 0 || dir.realMove >= 1 - CAR_SIZE/2)
 			) {
@@ -344,6 +342,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 			}
 		}
 
+
 		const runCheck = (
 			dir: Direction,
 			explorer: GridExplorer,
@@ -356,8 +355,10 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 			const opDir = opposeDirection(dir);
 
 			for (; checkDist < range; checkDist++) {
-				explorer.move(turnDir, cmap);
+				if ((window as any).fastView && car.id === 0 && (forbiddenCarsFlag & (1<<5)) === 0)
+					console.log(">",explorer.x, explorer.y, forbiddenCarsFlag);
 
+				explorer.move(turnDir, cmap);
 				const road = explorer.getRoad();
 
 				const checkToLeft = (flags: number) => {
@@ -435,10 +436,11 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 								leftFlag |= flag;
 								break;
 							}
-
-							checkToLeft(leftFlag);
-							checkToRight(rightFlag);
 						}
+
+						// checkToLeft(leftFlag);
+						checkToRight(rightFlag);
+						
 						break;
 					}
 					}
@@ -502,6 +504,9 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 		}
 
 
+
+		if ((window as any).fastView && car.id === 0)
+			console.log(pos.x, pos.y);
 
 		if (checkRight) {
 			runCheck(checkDir.rdir, new GridExplorer(pos), 1, 0);

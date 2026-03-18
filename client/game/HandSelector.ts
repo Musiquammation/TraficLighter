@@ -71,7 +71,7 @@ class HandSelector {
 	}
 	
 	hidePanel() {
-		this.panelDiv.classList.add('hidden');
+		// this.panelDiv.classList.add('hidden');
 		this.setMode(HandSelection.NONE);
 	}
 }

@@ -41,7 +41,7 @@ export class LevelsState extends GameState {
 
 	exit() {
 		if (window.DEBUG) {
-			return LEVELS[8];
+			return LEVELS[0];
 			
 		} else {
 			const v = prompt("Level? [1, 2, 3 or 4]");
@@ -59,19 +59,19 @@ export class LevelsState extends GameState {
 
 
 
-function b(x: number, y: number) {
-	return {x, y, data: 8};
+function b(x: number, y: number, data = 8) {
+	return {x, y, data};
 }
 
 function c(x: number, y: number, color: CarColor) {
 	return {x, y, data: roadtypes.types.CONSUMER | (color << 3)};
 }
 
-function rect(x: number, y: number, w: number, h: number) {
+function rect(x: number, y: number, w: number, h: number, data=8) {
 	const arr = [];
 	for (let i = x; i < x + w; i++) {
 		for (let j = y; j < y + h; j++) {
-			arr.push(b(i, j));
+			arr.push(b(i, j, data));
 		}
 	}
 	return arr;
@@ -79,39 +79,51 @@ function rect(x: number, y: number, w: number, h: number) {
 
 
 const LEVELS: MapConstructor[] = [
-	// Level 0
 	new MapConstructor({
-		time: (599.9)*60,
+		time: 100*60,
 		width: 31,
 		height: 31,
 		spawners: [
 			{
-				x: 11,
-				y: 17,
-				color: CarColor.RED,
-				rythm: 	40,
-				couldown: 1,
-				direction: Direction.RIGHT,
+				x: 12,
+				y: 9,
+				color: CarColor.PINK,
+				rythm: 90,
+				couldown: 3,
+				direction: Direction.LEFT,
 				count: Infinity,
-				score: 1
+				score: 20
 			},
 
 			{
-				x: 11,
-				y: 16,
-				color: CarColor.YELLOW,
-				rythm: 	40,
+				x: 12,
+				y: 10,
+				color: CarColor.PINK,
+				rythm: 90,
 				couldown: 1,
-				direction: Direction.RIGHT,
+				direction: Direction.LEFT,
 				count: Infinity,
-				score: 1
-			},
+				score: 20
+			},	
 
+			{
+				x: 12,
+				y: 11,
+				color: CarColor.PINK,
+				rythm: 90,
+				couldown: 2,
+				direction: Direction.LEFT,
+				count: Infinity,
+				score: 20
+			},
 		],
 
 		roads: [
-			c(17, 14, CarColor.RED),
-			c(19, 14, CarColor.YELLOW),
+			c(23, 1, CarColor.RED),
+			c(24, 1, CarColor.WHITE),
+			c(25, 1, CarColor.RED),
+			c(1, 10, CarColor.PINK),
+			c(1, 9, CarColor.YELLOW),
 		]
 	}),
 
