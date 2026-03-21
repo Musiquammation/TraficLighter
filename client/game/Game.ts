@@ -35,6 +35,8 @@ export class Game extends GameState {
 	private runningCars = false;
 	private score = 0;
 	private lastMouseX = 0;
+	private lastScreenMouseX = NaN;
+	private lastScreenMouseY = NaN;
 	private lastMouseY = 0;
 	private lightTick = 0;
 	private lightTickCouldown = 0;
@@ -205,7 +207,9 @@ export class Game extends GameState {
 		const runMode = (
 			smode: HandSelection,
 			x: number, y: number,
-			moving: boolean
+			moving: boolean,
+			mouseScreenX: number,
+			mouseScreenY: number,
 		) => {
 			let roadtype: roadtypes.types | null = null;
 
@@ -238,6 +242,18 @@ export class Game extends GameState {
 					this.chunkMap.setRoad(x, y, road);
 				}
 
+				break;
+			}
+
+			case HandSelection.MOVE:
+			{
+				if (isNaN(this.lastScreenMouseX) || isNaN(this.lastScreenMouseY))
+					break;
+
+				const dx = (this.lastScreenMouseX - mouseScreenX) / this.camera.z;
+				const dy = (this.lastScreenMouseY - mouseScreenY) / this.camera.z;
+				this.camera.x += dx;
+				this.camera.y += dy;
 				break;
 			}
 
@@ -285,8 +301,12 @@ export class Game extends GameState {
 		};
 
 		const mouseUp = (clientX: number, clientY: number) => {
+			this.lastScreenMouseX = NaN;
+			this.lastScreenMouseY = NaN;
+
 			const {x,y} = this.getMousePosition(clientX, clientY);
 			updateMouse(x, y);
+
 		}
 
 		const mouseDown = (
@@ -295,11 +315,14 @@ export class Game extends GameState {
 			buttons: number,
 			shiftKey: boolean
 		) => {
+			this.lastScreenMouseX = NaN;
+			this.lastScreenMouseY = NaN;
+
 			const {x,y} = this.getMousePosition(clientX, clientY);
 
 			const smode = handSelector.getMode();
 			if (smode) {
-				runMode(smode, x, y, false);
+				runMode(smode, x, y, false, clientX, clientY);
 				return;
 			}
 
@@ -352,7 +375,10 @@ export class Game extends GameState {
 
 			const smode = handSelector.getMode();
 			if (smode && leftDown) {
-				runMode(smode, x, y, true);
+				runMode(smode, x, y, true, clientX, clientY);
+				this.lastScreenMouseX = clientX;
+				this.lastScreenMouseY = clientY;
+
 				return;
 			}
 
@@ -366,11 +392,19 @@ export class Game extends GameState {
 
 
 			updateMouse(x, y);
+			this.lastScreenMouseX = clientX;
+			this.lastScreenMouseY = clientY;
+
 		};
 
 		input.onMouseUp = e => mouseUp(e.clientX, e.clientY);
 		input.onMouseDown = e => mouseDown(e.clientX, e.clientY, e.buttons, e.shiftKey);
 		input.onMouseMove = e => mouseMove(e.clientX, e.clientY, e.buttons, e.shiftKey);
+
+		input.onTouchStart = e => {
+			this.lastScreenMouseX = NaN;
+			this.lastScreenMouseY = NaN;
+		};
 
 		input.onTouchMove = e =>
 			mouseMove(e.touches[0].clientX, e.touches[0].clientY, 1, false);

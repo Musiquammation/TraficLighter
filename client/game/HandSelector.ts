@@ -4,6 +4,7 @@ export enum HandSelection {
 	ROAD,
 	ERASE,
 	ROTATE,
+	MOVE,
 
 	TURN,
 	PRIORITY,
@@ -17,6 +18,7 @@ export const HAND_SELECTION_ICONS = [
 	'icon_road',
 	'icon_erase',
 	'icon_rotate',
+	'icon_move',
 
 	'turn',
 	'yield',
