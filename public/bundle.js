@@ -958,7 +958,7 @@ function getDanger(car, range, cmap) {
         break;
       }
       case roadtypes.types.PRIORITY:
-        if (road >> 6 !== car.direction)
+        if (road >> 6 !== dir.dir)
           break;
         if (dist > 0) {
           checkRight = true;
@@ -977,7 +977,7 @@ function getDanger(car, range, cmap) {
         if (dist <= 0)
           break;
         checkRight = true;
-        if (road >> 6 === car.direction && (road & 1 << 3) === 0 && (dist > 0 || dir.realMove >= 1 - CAR_SIZE / 2)) {
+        if (road >> 6 === dir.dir && (road & 1 << 3) === 0 && (dist > 0 || dir.realMove >= 1 - CAR_SIZE / 2)) {
           finish = true;
         }
         break;
@@ -1070,6 +1070,8 @@ function getDanger(car, range, cmap) {
       const rightDir = rotateDirectionToRight(dir2);
       const opDir = opposeDirection(dir2);
       for (; checkDist < range; checkDist++) {
+        if (window.fastView && car.id === 0 && (forbiddenCarsFlag & 1 << 5) === 0)
+          console.log(">", explorer.x, explorer.y, forbiddenCarsFlag);
         explorer.move(turnDir, cmap);
         const road2 = explorer.getRoad();
         const checkToLeft = (flags) => {
@@ -1112,14 +1114,12 @@ function getDanger(car, range, cmap) {
                   checkToRight(forbiddenCarsFlag);
                 break;
               default: {
-                let leftFlag = forbiddenCarsFlag;
                 let rightFlag = forbiddenCarsFlag;
                 const arr = COLOR_TURNS[type - 2];
                 for (let i = 0; i < 8; i++) {
                   const flag = 1 << i;
                   switch (arr[i]) {
                     case 0:
-                      leftFlag |= flag;
                       rightFlag |= flag;
                       break;
                     case 1:
@@ -1128,18 +1128,18 @@ function getDanger(car, range, cmap) {
                       break;
                     case 2:
                       forbiddenCarsFlag |= flag;
-                      leftFlag |= flag;
                       break;
                   }
-                  checkToLeft(leftFlag);
-                  checkToRight(rightFlag);
                 }
+                checkToRight(rightFlag);
                 break;
               }
             }
             break;
           case roadtypes.types.SPAWNER:
+            break;
           case roadtypes.types.CONSUMER:
+            forbiddenCarsFlag |= 1 >> (road2 << 3);
             break;
           case roadtypes.types.PRIORITY:
             if (road2 >> 6 === opDir) {
@@ -1179,6 +1179,8 @@ function getDanger(car, range, cmap) {
         break;
       }
     };
+    if (window.fastView && car.id === 0)
+      console.log(pos.x, pos.y);
     if (checkRight) {
       runCheck(checkDir.rdir, new GridExplorer(pos), 1, 0);
     }
@@ -1886,10 +1888,11 @@ var HandSelection = /* @__PURE__ */ ((HandSelection2) => {
   HandSelection2[HandSelection2["ROAD"] = 1] = "ROAD";
   HandSelection2[HandSelection2["ERASE"] = 2] = "ERASE";
   HandSelection2[HandSelection2["ROTATE"] = 3] = "ROTATE";
-  HandSelection2[HandSelection2["TURN"] = 4] = "TURN";
-  HandSelection2[HandSelection2["PRIORITY"] = 5] = "PRIORITY";
-  HandSelection2[HandSelection2["LIGHT"] = 6] = "LIGHT";
-  HandSelection2[HandSelection2["ALTERN"] = 7] = "ALTERN";
+  HandSelection2[HandSelection2["MOVE"] = 4] = "MOVE";
+  HandSelection2[HandSelection2["TURN"] = 5] = "TURN";
+  HandSelection2[HandSelection2["PRIORITY"] = 6] = "PRIORITY";
+  HandSelection2[HandSelection2["LIGHT"] = 7] = "LIGHT";
+  HandSelection2[HandSelection2["ALTERN"] = 8] = "ALTERN";
   return HandSelection2;
 })(HandSelection || {});
 const HAND_SELECTION_ICONS = [
@@ -1897,6 +1900,7 @@ const HAND_SELECTION_ICONS = [
   "icon_road",
   "icon_erase",
   "icon_rotate",
+  "icon_move",
   "turn",
   "yield",
   "light_green",
@@ -1935,7 +1939,6 @@ class HandSelector {
     this.panelDiv.classList.remove("hidden");
   }
   hidePanel() {
-    this.panelDiv.classList.add("hidden");
     this.setMode(
       0
       /* NONE */
@@ -1959,6 +1962,8 @@ class Game extends GameState {
     this.runningCars = false;
     this.score = 0;
     this.lastMouseX = 0;
+    this.lastScreenMouseX = NaN;
+    this.lastScreenMouseY = NaN;
     this.lastMouseY = 0;
     this.lightTick = 0;
     this.lightTickCouldown = 0;
@@ -2073,7 +2078,7 @@ class Game extends GameState {
       this.lastMouseX = x;
       this.lastMouseY = y;
     };
-    const runMode = (smode, x, y, moving) => {
+    const runMode = (smode, x, y, moving, mouseScreenX, mouseScreenY) => {
       let roadtype = null;
       if (moving && Math.floor(this.lastMouseX) === Math.floor(x) && Math.floor(this.lastMouseY) === Math.floor(y)) {
         return;
@@ -2094,6 +2099,15 @@ class Game extends GameState {
           if (road !== null) {
             this.chunkMap.setRoad(x, y, road);
           }
+          break;
+        }
+        case HandSelection.MOVE: {
+          if (isNaN(this.lastScreenMouseX) || isNaN(this.lastScreenMouseY))
+            break;
+          const dx = (this.lastScreenMouseX - mouseScreenX) / this.camera.z;
+          const dy = (this.lastScreenMouseY - mouseScreenY) / this.camera.z;
+          this.camera.x += dx;
+          this.camera.y += dy;
           break;
         }
         case HandSelection.TURN:
@@ -2130,14 +2144,18 @@ class Game extends GameState {
       updateMouse(x, y);
     };
     const mouseUp = (clientX, clientY) => {
+      this.lastScreenMouseX = NaN;
+      this.lastScreenMouseY = NaN;
       const { x, y } = this.getMousePosition(clientX, clientY);
       updateMouse(x, y);
     };
     const mouseDown = (clientX, clientY, buttons, shiftKey) => {
+      this.lastScreenMouseX = NaN;
+      this.lastScreenMouseY = NaN;
       const { x, y } = this.getMousePosition(clientX, clientY);
       const smode = handSelector.getMode();
       if (smode) {
-        runMode(smode, x, y, false);
+        runMode(smode, x, y, false, clientX, clientY);
         return;
       }
       const leftDown = (buttons & 1) !== 0;
@@ -2171,7 +2189,9 @@ class Game extends GameState {
       }
       const smode = handSelector.getMode();
       if (smode && leftDown) {
-        runMode(smode, x, y, true);
+        runMode(smode, x, y, true, clientX, clientY);
+        this.lastScreenMouseX = clientX;
+        this.lastScreenMouseY = clientY;
         return;
       }
       if (leftDown) {
@@ -2182,10 +2202,16 @@ class Game extends GameState {
         }
       }
       updateMouse(x, y);
+      this.lastScreenMouseX = clientX;
+      this.lastScreenMouseY = clientY;
     };
     input.onMouseUp = (e) => mouseUp(e.clientX, e.clientY);
     input.onMouseDown = (e) => mouseDown(e.clientX, e.clientY, e.buttons, e.shiftKey);
     input.onMouseMove = (e) => mouseMove(e.clientX, e.clientY, e.buttons, e.shiftKey);
+    input.onTouchStart = (e) => {
+      this.lastScreenMouseX = NaN;
+      this.lastScreenMouseY = NaN;
+    };
     input.onTouchMove = (e) => mouseMove(e.touches[0].clientX, e.touches[0].clientY, 1, false);
     input.onScroll = (e) => {
       let { x, y } = this.getMousePosition(e.clientX, e.clientY);
@@ -2279,6 +2305,7 @@ class Game extends GameState {
     }
   }
   frame(game) {
+    window.fastView = game.inputHandler.first("fastView");
     let times = game.inputHandler.press("fastView") ? FAST_TIMES : 1;
     this.placeKeyboardRoads(game.inputHandler);
     for (let i = 0; i < times; i++) {
@@ -2288,6 +2315,7 @@ class Game extends GameState {
           chunk.runEvents(this.lightTick);
         }
         this.runCars();
+        window.fastView = false;
       }
       if (this.carFrame >= this.chunkMap.time)
         return new TransitionState(this);
@@ -2450,7 +2478,7 @@ class LevelsState extends GameState {
   }
   exit() {
     if (window.DEBUG) {
-      return LEVELS[8];
+      return LEVELS[0];
     } else {
       const v = prompt("Level? [1, 2, 3 or 4]");
       if (v !== null)
@@ -2461,52 +2489,64 @@ class LevelsState extends GameState {
     return null;
   }
 }
-function b(x, y) {
-  return { x, y, data: 8 };
+function b(x, y, data = 8) {
+  return { x, y, data };
 }
 function c(x, y, color) {
   return { x, y, data: roadtypes.types.CONSUMER | color << 3 };
 }
-function rect(x, y, w, h) {
+function rect(x, y, w, h, data = 8) {
   const arr = [];
   for (let i = x; i < x + w; i++) {
     for (let j = y; j < y + h; j++) {
-      arr.push(b(i, j));
+      arr.push(b(i, j, data));
     }
   }
   return arr;
 }
 const LEVELS = [
-  // Level 0
   new MapConstructor({
-    time: 599.9 * 60,
+    time: 100 * 60,
     width: 31,
     height: 31,
     spawners: [
       {
-        x: 11,
-        y: 17,
-        color: CarColor.RED,
-        rythm: 40,
-        couldown: 1,
-        direction: Direction.RIGHT,
+        x: 12,
+        y: 9,
+        color: CarColor.PINK,
+        rythm: 90,
+        couldown: 3,
+        direction: Direction.LEFT,
         count: Infinity,
-        score: 1
+        score: 20
       },
       {
-        x: 11,
-        y: 16,
-        color: CarColor.YELLOW,
-        rythm: 40,
+        x: 12,
+        y: 10,
+        color: CarColor.PINK,
+        rythm: 90,
         couldown: 1,
-        direction: Direction.RIGHT,
+        direction: Direction.LEFT,
         count: Infinity,
-        score: 1
+        score: 20
+      },
+      {
+        x: 12,
+        y: 11,
+        color: CarColor.PINK,
+        rythm: 90,
+        couldown: 2,
+        direction: Direction.LEFT,
+        count: Infinity,
+        score: 20
       }
     ],
     roads: [
-      c(17, 14, CarColor.RED),
-      c(19, 14, CarColor.YELLOW)
+      c(23, 1, CarColor.RED),
+      c(24, 1, CarColor.WHITE),
+      c(25, 1, CarColor.RED),
+      c(6, 7, CarColor.PINK),
+      c(1, 9, CarColor.YELLOW)
     ]
   }),
   // Level 1
@@ -2685,7 +2725,8 @@ const LEVELS = [
     roads: [
       c(30, 20, CarColor.CYAN),
       c(20, 30, CarColor.BLUE),
-      c(27, 27, CarColor.RED)
+      c(26, 27, CarColor.RED),
+      c(28, 27, CarColor.RED)
     ]
   }),
   // Level 4
