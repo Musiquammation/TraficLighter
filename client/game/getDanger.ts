@@ -142,7 +142,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 	for (let dist = 0; dist < range; dist++) {
 		const road = pos.getRoad();
 		const checkDir = new DirHelper(dir);
-		let finish = false;
+		let finish: 'continue' | 'stop' | 'consume' = 'continue';
 		let checkLeft = willCheckPriorities;
 		let checkRight = willCheckPriorities;
 		willCheckPriorities = false;
@@ -150,7 +150,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 
 		switch ((road & 0x7) as roadtypes.types) {
 		case roadtypes.types.VOID:
-			finish = true;
+			finish = 'stop';
 			break;
 
 		case roadtypes.types.ROAD:
@@ -210,6 +210,10 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 			break;
 			
 		case roadtypes.types.CONSUMER:
+			if (((road >> 3) & 0x7) === car.color) {
+				finish = 'consume';
+			}
+
 			break;
 
 		case roadtypes.types.LIGHT:
@@ -222,7 +226,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 				&& (road & (1<<3)) === 0
 				&& (dist > 0 || dir.realMove >= 1 - CAR_SIZE/2)
 			) {
-				finish = true;
+				finish = 'stop';
 			}
 			
 			break;
@@ -273,10 +277,13 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 		}
 
 
-		if (finish) {
+		if (finish === 'stop') {
 			limDist(dist - CAR_SIZE/2 - dir.realMove);
 			break; // no more road to check
 		}
+
+		if (finish === 'consume')
+			break;  // no more road to check
 
 
 		let willBreak = false;
@@ -452,7 +459,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 					break;
 
 				case roadtypes.types.CONSUMER:
-					forbiddenCarsFlag |= 1>>(road << 3);
+					forbiddenCarsFlag |= 1 >> ((road << 3) & 0x7);
 					break;
 
 				case roadtypes.types.PRIORITY:
@@ -488,7 +495,8 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 					}
 				}
 
-				const fastSpeed = exitDist * over.speedLimit / over_entryDist;
+				const fastSpeed = exitDist * over.speed / over_entryDist;
+
 				if (fastSpeed > fastPrioritySpeed) {
 					fastPrioritySpeed = fastSpeed;
 					fastPriorityAcceleration = .5 * (fastSpeed*fastSpeed -
