@@ -5,6 +5,7 @@ import {InputHandler} from "./InputHandler";
 import { ImageLoader } from "./ImageLoader";
 import { LevelsState } from "../states/LevelsState";
 import { HAND_SELECTION_ICONS, HandSelection, handSelector } from "../game/HandSelector";
+import { GAME_COLORS } from "./GAME_COLORS";
 
 declare global {
 	interface Window {
@@ -110,16 +111,7 @@ export class GameHandler {
 
 		this.imgLoader.loadWithColors(
 			"#ac3232",
-			[
-				"#ac3232",
-				"#fbf236",
-				"#5b6ee1",
-				"#6abe30",
-				"#5fcde4",
-				"#d77bba",
-				"#f0f8ed",
-				"#6e6e6e"
-			],
+			GAME_COLORS,
 			{
 				consumer: "assets/consumer.png",
 				spawner: "assets/spawner.png",

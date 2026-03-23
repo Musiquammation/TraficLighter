@@ -16,6 +16,7 @@ import { MapConstructor } from "./MapConstructor";
 import { PauseElement } from "../handler/PauseElement";
 import { GridExplorer } from "./GridExplorer";
 import { HandSelection, handSelector } from "./HandSelector";
+import { produceStatsPanel } from "./produceStatsPanel";
 
 
 const timeLeftDiv = document.getElementById("timeLeft")!;
@@ -40,6 +41,8 @@ export class Game extends GameState {
 	private lastMouseY = 0;
 	private lightTick = 0;
 	private lightTickCouldown = 0;
+	private statsPanel?: HTMLDivElement;
+
 
 
 	private placeRoad(x: number, y: number) {
@@ -192,6 +195,11 @@ export class Game extends GameState {
 		const mapConstructor = data as MapConstructor;
 		mapConstructor.fill(this.chunkMap);
 		mapConstructor.setCamera(this.camera);
+
+		const panel = produceStatsPanel(mapConstructor);
+		document.body.appendChild(panel);
+		this.statsPanel = panel;
+
 
 		this.test();
 
@@ -639,6 +647,11 @@ export class Game extends GameState {
 
 	exit() {
 		document.getElementById("gameView")?.classList.add("hidden");
+		
+		if (this.statsPanel) {
+			this.statsPanel.remove();
+		}
+
 		return {score: this.score};	
 	}
 
