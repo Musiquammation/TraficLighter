@@ -1,4 +1,3 @@
-
 export enum HandSelection {
 	NONE,
 	ROAD,
@@ -11,6 +10,8 @@ export enum HandSelection {
 	LIGHT,
 	ALTERN
 };
+
+const zoomContainerHtml = document.getElementById("zoomContainer")!;
 
 
 export const HAND_SELECTION_ICONS = [
@@ -45,6 +46,12 @@ class HandSelector {
 		this.panelDiv.children[idx].classList.add('selected');
 		
 		this.currentMode = idx;
+
+		if (idx === HandSelection.MOVE) {
+			zoomContainerHtml.classList.remove("hidden");
+		} else {
+			zoomContainerHtml.classList.add("hidden");
+	}
 	}
 
 	getMode() {

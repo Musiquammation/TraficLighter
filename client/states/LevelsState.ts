@@ -88,45 +88,14 @@ const LEVELS: MapConstructor[] = [
 				x: 6,
 				y: 12,
 				color: CarColor.RED,
-				rythm: 60,
+				rythm: 90,
 				couldown: 1,
 				direction: Direction.UP,
 				count: Infinity,
 				score: 20
 			},
 
-			{
-				x: 5,
-				y: 1,
-				color: CarColor.BLUE,
-				rythm: 60,
-				couldown: 1,
-				direction: Direction.UP,
-				count: Infinity,
-				score: 20
-			},	
-
-			{
-				x: 12,
-				y: 7,
-				color: CarColor.YELLOW,
-				rythm: 30,
-				couldown: 1,
-				direction: Direction.LEFT,
-				count: Infinity,
-				score: 20
-			},
-
-			{
-				x: 1,
-				y: 8,
-				color: CarColor.GREEN,
-				rythm: 60,
-				couldown: 1,
-				direction: Direction.LEFT,
-				count: Infinity,
-				score: 20
-			},
+			
 		],
 
 		roads: [
@@ -135,8 +104,6 @@ const LEVELS: MapConstructor[] = [
 			c(1, 7, CarColor.YELLOW),
 			c(12, 8, CarColor.GREEN),
 
-			...rect(5, 1, 2, 11, 1),
-			...rect(2, 7, 11, 2, 1),
 		]
 	}),
 

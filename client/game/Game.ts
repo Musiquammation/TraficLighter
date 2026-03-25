@@ -189,6 +189,20 @@ export class Game extends GameState {
 				this.restart();
 			};
 		}
+
+
+		const zoomInc = document.getElementById("zoomInc");
+		if (zoomInc) {
+			zoomInc.onclick = () => this.camera.z *= 1.3;
+		}
+
+		const zoomDec = document.getElementById("zoomDec");
+		if (zoomDec) {
+			zoomDec.onclick = () => this.camera.z /= 1.3;
+		}
+
+
+		
 	}
 
 	enter(data: any, input: InputHandler): void {
@@ -258,8 +272,8 @@ export class Game extends GameState {
 				if (isNaN(this.lastScreenMouseX) || isNaN(this.lastScreenMouseY))
 					break;
 
-				const dx = (this.lastScreenMouseX - mouseScreenX) / this.camera.z;
-				const dy = (this.lastScreenMouseY - mouseScreenY) / this.camera.z;
+				const dx = (this.lastScreenMouseX - mouseScreenX) * (4/this.camera.z);
+				const dy = (this.lastScreenMouseY - mouseScreenY) * (4/this.camera.z);
 				this.camera.x += dx;
 				this.camera.y += dy;
 				break;

@@ -69,7 +69,7 @@ export class GameHandler {
 				this.imgLoader.get('restart'),
 				document.getElementById("restart")!
 			);
-		});
+		});		
 
 		// Load game assets
 		this.imgLoader.load({
@@ -89,6 +89,7 @@ export class GameHandler {
 			filter_share_front: "assets/filter/share-front.png",
 			filter_share_turn: "assets/filter/share-turn.png",
 			icon_none: "assets/icons/none.png",
+			icon_move: "assets/icons/move.png",
 			icon_erase: "assets/icons/erase.png",
 			icon_road: "assets/icons/road.png",
 			icon_rotate: "assets/icons/rotate.png",
@@ -108,6 +109,23 @@ export class GameHandler {
 		});
 
 		
+		// Load zoom +/-
+		this.imgLoader.load({
+			zoomInc: "assets/icons/zoomInc.png",
+			zoomDec: "assets/icons/zoomDec.png",
+		}).then(() => {
+			setElementAsBackground(
+				this.imgLoader.get('zoomInc'),
+				document.getElementById("zoomInc")!
+			);
+
+			setElementAsBackground(
+				this.imgLoader.get('zoomDec'),
+				document.getElementById("zoomDec")!
+			);
+
+		});
+
 
 		this.imgLoader.loadWithColors(
 			"#ac3232",
