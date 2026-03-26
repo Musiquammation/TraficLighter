@@ -915,13 +915,13 @@ function getDanger(car, range, cmap) {
   for (let dist = 0; dist < range; dist++) {
     const road = pos.getRoad();
     const checkDir = new DirHelper(dir);
-    let finish = false;
+    let finish = "continue";
     let checkLeft = willCheckPriorities;
     let checkRight = willCheckPriorities;
     willCheckPriorities = false;
     switch (road & 7) {
       case roadtypes.types.VOID:
-        finish = true;
+        finish = "stop";
         break;
       case roadtypes.types.ROAD:
         if (dist > 0) {
@@ -972,13 +972,16 @@ function getDanger(car, range, cmap) {
         }
         break;
       case roadtypes.types.CONSUMER:
+        if ((road >> 3 & 7) === car.color) {
+          finish = "consume";
+        }
         break;
       case roadtypes.types.LIGHT:
         if (dist <= 0)
           break;
         checkRight = true;
         if (road >> 6 === dir.dir && (road & 1 << 3) === 0 && (dist > 0 || dir.realMove >= 1 - CAR_SIZE / 2)) {
-          finish = true;
+          finish = "stop";
         }
         break;
       case roadtypes.types.ALTERN:
@@ -1013,10 +1016,12 @@ function getDanger(car, range, cmap) {
         }
         break;
     }
-    if (finish) {
+    if (finish === "stop") {
       limDist(dist - CAR_SIZE / 2 - dir.realMove);
       break;
     }
+    if (finish === "consume")
+      break;
     let willBreak = false;
     if (dist > 0) {
       const over = pos.chunk.getCar(pos.x, pos.y);
@@ -1139,7 +1144,7 @@ function getDanger(car, range, cmap) {
           case roadtypes.types.SPAWNER:
             break;
           case roadtypes.types.CONSUMER:
-            forbiddenCarsFlag |= 1 >> (road2 << 3);
+            forbiddenCarsFlag |= 1 >> (road2 << 3 & 7);
             break;
           case roadtypes.types.PRIORITY:
             if (road2 >> 6 === opDir) {
@@ -1168,7 +1173,7 @@ function getDanger(car, range, cmap) {
             over_exitDist = 0;
           }
         }
-        const fastSpeed = exitDist * over.speedLimit / over_entryDist;
+        const fastSpeed = exitDist * over.speed / over_entryDist;
         if (fastSpeed > fastPrioritySpeed) {
           fastPrioritySpeed = fastSpeed;
           fastPriorityAcceleration = 0.5 * (fastSpeed * fastSpeed - car.speed * car.speed) / exitDist;
@@ -1895,6 +1900,7 @@ var HandSelection = /* @__PURE__ */ ((HandSelection2) => {
   HandSelection2[HandSelection2["ALTERN"] = 8] = "ALTERN";
   return HandSelection2;
 })(HandSelection || {});
+const zoomContainerHtml = document.getElementById("zoomContainer");
 const HAND_SELECTION_ICONS = [
   "icon_none",
   "icon_road",
@@ -1918,6 +1924,11 @@ class HandSelector {
     this.panelDiv.children[this.currentMode].classList.remove("selected");
     this.panelDiv.children[idx].classList.add("selected");
     this.currentMode = idx;
+    if (idx === 4) {
+      zoomContainerHtml.classList.remove("hidden");
+    } else {
+      zoomContainerHtml.classList.add("hidden");
+    }
   }
   getMode() {
     return this.currentMode;
@@ -1947,6 +1958,56 @@ class HandSelector {
 }
 const handSelector = new HandSelector(document.getElementById("handPanel"));
 handSelector.appendDivList();
+function produceStatsPanel(map) {
+  const panel = document.createElement("div");
+  panel.classList.add("statsPanel");
+  panel.classList.add("shown");
+  const table = document.createElement("table");
+  const head = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  for (const headerText of ["(x,y)", "rythm", "score", "color"]) {
+    const th = document.createElement("th");
+    th.textContent = headerText;
+    headRow.appendChild(th);
+  }
+  head.appendChild(headRow);
+  table.appendChild(head);
+  const body = document.createElement("tbody");
+  const sortedSpawners = [...map.carSpawners].sort((a, b2) => {
+    if (a.score !== b2.score) {
+      return b2.score - a.score;
+    }
+    return a.color - b2.color;
+  });
+  for (const spawner of sortedSpawners) {
+    const row = document.createElement("tr");
+    row.dataset.color = spawner.color.toString();
+    if (spawner.color === CarColor.WHITE) {
+      row.style.color = "#000";
+    }
+    const xy = document.createElement("td");
+    xy.textContent = `(${spawner.x},${spawner.y})`;
+    row.appendChild(xy);
+    const rhythm = document.createElement("td");
+    rhythm.textContent = String(spawner.rythm);
+    row.appendChild(rhythm);
+    const score = document.createElement("td");
+    score.textContent = `+${spawner.score}`;
+    row.appendChild(score);
+    const color = document.createElement("td");
+    color.textContent = CarColor[spawner.color] || String(spawner.color);
+    row.appendChild(color);
+    body.appendChild(row);
+  }
+  table.appendChild(body);
+  const button = document.createElement("button");
+  button.addEventListener("click", () => {
+    panel.classList.toggle("shown");
+  });
+  panel.appendChild(button);
+  panel.appendChild(table);
+  return panel;
+}
 const timeLeftDiv = document.getElementById("timeLeft");
 const scoreDiv = document.getElementById("score");
 const mousePosDiv = document.getElementById("mousePos");
@@ -2066,11 +2127,22 @@ class Game extends GameState {
         this.restart();
       };
     }
+    const zoomInc = document.getElementById("zoomInc");
+    if (zoomInc) {
+      zoomInc.onclick = () => this.camera.z *= 1.3;
+    }
+    const zoomDec = document.getElementById("zoomDec");
+    if (zoomDec) {
+      zoomDec.onclick = () => this.camera.z /= 1.3;
+    }
   }
   enter(data, input) {
     const mapConstructor = data;
     mapConstructor.fill(this.chunkMap);
     mapConstructor.setCamera(this.camera);
+    const panel = produceStatsPanel(mapConstructor);
+    document.body.appendChild(panel);
+    this.statsPanel = panel;
     this.test();
     this.handleHTML();
     const updateMouse = (x, y) => {
@@ -2104,8 +2176,8 @@ class Game extends GameState {
         case HandSelection.MOVE: {
           if (isNaN(this.lastScreenMouseX) || isNaN(this.lastScreenMouseY))
             break;
-          const dx = (this.lastScreenMouseX - mouseScreenX) / this.camera.z;
-          const dy = (this.lastScreenMouseY - mouseScreenY) / this.camera.z;
+          const dx = (this.lastScreenMouseX - mouseScreenX) * (4 / this.camera.z);
+          const dy = (this.lastScreenMouseY - mouseScreenY) * (4 / this.camera.z);
           this.camera.x += dx;
           this.camera.y += dy;
           break;
@@ -2373,6 +2445,9 @@ class Game extends GameState {
   }
   exit() {
     document.getElementById("gameView")?.classList.add("hidden");
+    if (this.statsPanel) {
+      this.statsPanel.remove();
+    }
     return { score: this.score };
   }
   getCamera() {
@@ -2478,9 +2553,9 @@ class LevelsState extends GameState {
   }
   exit() {
     if (window.DEBUG) {
-      return LEVELS[0];
+      return LEVELS[11];
     } else {
-      const v = prompt("Level? [1, 2, 3 or 4]");
+      const v = prompt(`Level? [1 to ${LEVELS.length - 1}]`);
       if (v !== null)
         return LEVELS[+v];
     }
@@ -2511,42 +2586,21 @@ const LEVELS = [
     height: 31,
     spawners: [
       {
-        x: 12,
-        y: 9,
-        color: CarColor.PINK,
-        rythm: 90,
-        couldown: 3,
-        direction: Direction.LEFT,
-        count: Infinity,
-        score: 20
-      },
-      {
-        x: 12,
-        y: 10,
-        color: CarColor.PINK,
+        x: 6,
+        y: 12,
+        color: CarColor.RED,
         rythm: 90,
         couldown: 1,
-        direction: Direction.LEFT,
-        count: Infinity,
-        score: 20
-      },
-      {
-        x: 12,
-        y: 11,
-        color: CarColor.PINK,
-        rythm: 90,
-        couldown: 2,
-        direction: Direction.LEFT,
+        direction: Direction.UP,
         count: Infinity,
         score: 20
       }
     ],
     roads: [
-      c(23, 1, CarColor.RED),
-      c(24, 1, CarColor.WHITE),
-      c(25, 1, CarColor.RED),
-      c(6, 7, CarColor.PINK),
-      c(1, 9, CarColor.YELLOW)
+      c(6, 1, CarColor.RED),
+      c(5, 12, CarColor.BLUE),
+      c(1, 7, CarColor.YELLOW),
+      c(12, 8, CarColor.GREEN)
     ]
   }),
   // Level 1
@@ -3334,7 +3388,174 @@ const LEVELS = [
       c(1, 10, CarColor.PINK),
       c(1, 9, CarColor.YELLOW)
     ]
+  }),
+  // Level 9
+  new MapConstructor({
+    time: 100 * 60,
+    width: 31,
+    height: 31,
+    spawners: [
+      ...Array.from({ length: 7 }, (_, i) => ({
+        x: 7 + 3 * i,
+        y: 30,
+        color: CarColor.RED,
+        rythm: 15,
+        couldown: 1,
+        direction: Direction.UP,
+        count: Infinity,
+        score: 1
+      })),
+      {
+        x: 1,
+        y: 8,
+        color: CarColor.YELLOW,
+        rythm: 50,
+        couldown: 1,
+        direction: Direction.RIGHT,
+        count: Infinity,
+        score: 20
+      }
+    ],
+    roads: [
+      ...Array.from({ length: 7 }, (_, i) => c(
+        7 + 3 * i,
+        1,
+        CarColor.RED
+      )),
+      ...Array.from({ length: 7 }).flatMap((_, i) => rect(
+        7 + 3 * i,
+        1,
+        1,
+        30,
+        1
+      )),
+      c(30, 8, CarColor.YELLOW)
+    ]
+  }),
+  // Level 10
+  new MapConstructor({
+    time: 100 * 60,
+    width: 31,
+    height: 31,
+    spawners: [
+      {
+        x: 15,
+        y: 30,
+        color: CarColor.RED,
+        rythm: 30,
+        couldown: 1,
+        direction: Direction.UP,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 16,
+        y: 30,
+        color: CarColor.RED,
+        rythm: 30,
+        couldown: 1,
+        direction: Direction.UP,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 17,
+        y: 30,
+        color: CarColor.RED,
+        rythm: 30,
+        couldown: 1,
+        direction: Direction.UP,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 13,
+        y: 28,
+        color: CarColor.GREEN,
+        rythm: 90,
+        couldown: 1,
+        direction: Direction.RIGHT,
+        count: Infinity,
+        score: 7
+      },
+      {
+        x: 19,
+        y: 28,
+        color: CarColor.YELLOW,
+        rythm: 75,
+        couldown: 1,
+        direction: Direction.LEFT,
+        count: Infinity,
+        score: 7
+      },
+      {
+        x: 30,
+        y: 10,
+        color: CarColor.PINK,
+        rythm: 120,
+        couldown: 1,
+        direction: Direction.LEFT,
+        count: Infinity,
+        score: 30
+      }
+    ],
+    roads: [
+      ...rect(12, 28, 1, 4),
+      ...rect(20, 28, 1, 4),
+      ...rect(12, 27, 3, 1),
+      ...rect(18, 27, 3, 1),
+      c(1, 5, CarColor.YELLOW),
+      c(30, 5, CarColor.GREEN),
+      c(1, 10, CarColor.PINK),
+      c(15, 1, CarColor.RED),
+      c(16, 1, CarColor.RED),
+      c(17, 1, CarColor.RED)
+    ]
+  }),
+  // Level 11
+  new MapConstructor({
+    time: 100 * 60,
+    width: 31,
+    height: 31,
+    spawners: [
+      {
+        x: 8,
+        y: 15,
+        color: CarColor.RED,
+        rythm: 30,
+        couldown: 1,
+        direction: Direction.RIGHT,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 23,
+        y: 15,
+        color: CarColor.YELLOW,
+        rythm: 30,
+        couldown: 1,
+        direction: Direction.LEFT,
+        count: Infinity,
+        score: 1
+      }
+    ],
+    roads: [
+      ...rect(15, 1, 2, 14),
+      ...rect(15, 16, 2, 15),
+      c(23, 14, CarColor.RED),
+      c(8, 14, CarColor.YELLOW)
+    ]
   })
+];
+const GAME_COLORS = [
+  "#ac3232",
+  "#fbf236",
+  "#5b6ee1",
+  "#6abe30",
+  "#5fcde4",
+  "#d77bba",
+  "#f0f8ed",
+  "#6e6e6e"
 ];
 function setElementAsBackground(element, div) {
   if (element instanceof HTMLCanvasElement) {
@@ -3393,6 +3614,7 @@ class GameHandler {
       filter_share_front: "assets/filter/share-front.png",
       filter_share_turn: "assets/filter/share-turn.png",
       icon_none: "assets/icons/none.png",
+      icon_move: "assets/icons/move.png",
       icon_erase: "assets/icons/erase.png",
       icon_road: "assets/icons/road.png",
       icon_rotate: "assets/icons/rotate.png"
@@ -3407,18 +3629,22 @@ class GameHandler {
         );
       }
     });
+    this.imgLoader.load({
+      zoomInc: "assets/icons/zoomInc.png",
+      zoomDec: "assets/icons/zoomDec.png"
+    }).then(() => {
+      setElementAsBackground(
+        this.imgLoader.get("zoomInc"),
+        document.getElementById("zoomInc")
+      );
+      setElementAsBackground(
+        this.imgLoader.get("zoomDec"),
+        document.getElementById("zoomDec")
+      );
+    });
     this.imgLoader.loadWithColors(
       "#ac3232",
-      [
-        "#ac3232",
-        "#fbf236",
-        "#5b6ee1",
-        "#6abe30",
-        "#5fcde4",
-        "#d77bba",
-        "#f0f8ed",
-        "#6e6e6e"
-      ],
+      GAME_COLORS,
       {
         consumer: "assets/consumer.png",
         spawner: "assets/spawner.png",
