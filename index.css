@@ -85,6 +85,36 @@ canvas {
 	image-rendering: crisp-edges; /* fallback */
 }
 
+#zoomInc {
+	display: block;
+	position: absolute;
+	left: 10px;
+	top: calc(13vmin + 30px);
+	width: 10vmin;
+	height: 10vmin;
+	background-color: green;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	image-rendering: pixelated;
+	image-rendering: crisp-edges; /* fallback */
+}
+
+#zoomDec {
+	display: block;
+	position: absolute;
+	left: calc(10vmin + 20px);
+	top: calc(13vmin + 30px);
+	width: 10vmin;
+	height: 10vmin;
+	background-color: green;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	image-rendering: pixelated;
+	image-rendering: crisp-edges; /* fallback */
+}
+
 #pause.inPause {
 	background-color: red;
 }
@@ -170,9 +200,110 @@ canvas {
 
 
 
-.hidden {
-	display: none;
+
+
+.statsPanel {
+  font-family: 'Courier New', Courier, monospace;
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%) translateX(100%);
+  transition: transform 0.4s ease;
+  display: flex;
+  align-items: center;
+  z-index: 100;
 }
 
+.statsPanel.shown {
+  transform: translateY(-50%) translateX(0%);
+}
+
+.statsPanel tr[data-color="0"] {
+	background-color: #ac3232;
+	color: white;
+}
+
+.statsPanel tr[data-color="1"] {
+	background-color: #fbf236;
+	color: black;
+}
+
+.statsPanel tr[data-color="2"] {
+	background-color: #5b6ee1;
+	color: white;
+}
+
+.statsPanel tr[data-color="3"] {
+	background-color: #6abe30;
+	color: black;
+}
+
+.statsPanel tr[data-color="4"] {
+	background-color: #5fcde4;
+	color: black;
+}
+
+.statsPanel tr[data-color="5"] {
+	background-color: #d77bba;
+	color: black;
+}
+
+.statsPanel tr[data-color="6"] {
+	background-color: #f0f8ed;
+	color: black;
+}
+
+.statsPanel tr[data-color="7"] {
+	background-color: #6e6e6e;
+	color: white;
+}
+
+
+.statsPanel button {
+  position: absolute;
+  right: 100%;
+  width: 28px;
+  height: 48px;
+  border: 1px solid #555;
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  background: #222;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statsPanel table {
+  background: #222;
+  border-collapse: collapse;
+  color: #fff;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.statsPanel table th,
+.statsPanel table td {
+  padding: 6px 10px;
+  border: 1px solid #444;
+}
+
+.statsPanel table thead {
+  background: #333;
+}
+
+
+
+
+
+
+
+
+.hidden {
+	display: none !important; 
+}
 
 
