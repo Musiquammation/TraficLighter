@@ -20,6 +20,7 @@ export class LevelsState extends GameState {
 		super();
 	}
 
+
 	enter(data: any, input: InputHandler): void {
 		input.onMouseUp = e => {};
 		input.onMouseDown = e => {};
@@ -41,10 +42,10 @@ export class LevelsState extends GameState {
 
 	exit() {
 		if (window.DEBUG) {
-			return LEVELS[0];
+			return LEVELS[11];
 			
 		} else {
-			const v = prompt("Level? [1, 2, 3 or 4]");
+			const v = prompt(`Level? [1 to ${LEVELS.length-1}]`);
 			if (v !== null)
 				return LEVELS[+v];
 
@@ -941,7 +942,174 @@ const LEVELS: MapConstructor[] = [
 			c(1, 10, CarColor.PINK),
 			c(1, 9, CarColor.YELLOW),
 		]
+	}),
+
+	// Level 9
+	new MapConstructor({
+		time: 100*60,
+		width: 31,
+		height: 31,
+		spawners: [
+			...Array.from({ length: 7 }, (_, i) => ({
+				x: 7 + 3*i,
+				y: 30,
+				color: CarColor.RED,
+				rythm: 15,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			})),
+
+			{
+				x: 1,
+				y: 8,
+				color: CarColor.YELLOW,
+				rythm: 50,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 20
+			}
+		],
+
+		roads: [
+			...Array.from({ length: 7 }, (_, i) => c(
+				7 + 3*i, 1, CarColor.RED
+			)),
+
+			...Array.from({ length: 7 }).flatMap((_, i) => rect(
+				7 + 3*i, 1, 1, 30, 1
+			)),
+
+
+			c(30, 8, CarColor.YELLOW),
+
+		]
+	}),
+
+	// Level 10
+	new MapConstructor({
+		time: 100*60,
+		width: 31,
+		height: 31,
+		spawners: [
+			{
+				x: 15,
+				y: 30,
+				color: CarColor.RED,
+				rythm: 30,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+			{
+				x: 16,
+				y: 30,
+				color: CarColor.RED,
+				rythm: 30,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+			{
+				x: 17,
+				y: 30,
+				color: CarColor.RED,
+				rythm: 30,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+			{
+				x: 13,
+				y: 28,
+				color: CarColor.GREEN,
+				rythm: 90,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 7
+			},
+			{
+				x: 19,
+				y: 28,
+				color: CarColor.YELLOW,
+				rythm: 75,
+				couldown: 1,
+				direction: Direction.LEFT,
+				count: Infinity,
+				score: 7
+			},
+
+			{
+				x: 30,
+				y: 10,
+				color: CarColor.PINK,
+				rythm: 120,
+				couldown: 1,
+				direction: Direction.LEFT,
+				count: Infinity,
+				score: 30
+			}
+		],
+
+		roads: [
+			...rect(12, 28, 1, 4),
+			...rect(20, 28, 1, 4),
+			...rect(12, 27, 3, 1),
+			...rect(18, 27, 3, 1),
+
+			c(1, 5, CarColor.YELLOW),
+			c(30, 5, CarColor.GREEN),
+			c(1, 10, CarColor.PINK),
+			c(15, 1, CarColor.RED),
+			c(16, 1, CarColor.RED),
+			c(17, 1, CarColor.RED),
+		]
+	}),
+
+	// Level 11
+	new MapConstructor({
+		time: 100*60,
+		width: 31,
+		height: 31,
+		spawners: [
+			{
+				x: 8,
+				y: 15,
+				color: CarColor.RED,
+				rythm: 30,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 1
+			},
+			{
+				x: 23,
+				y: 15,
+				color: CarColor.YELLOW,
+				rythm: 30,
+				couldown: 1,
+				direction: Direction.LEFT,
+				count: Infinity,
+				score: 1
+			},
+		],
+		roads: [
+			...rect(15, 1, 2, 14),
+			...rect(15, 16, 2, 15),
+
+			c(23, 14, CarColor.RED),
+			c(8, 14, CarColor.YELLOW),
+		]
 	})
+
+
+
 
 ];
 
