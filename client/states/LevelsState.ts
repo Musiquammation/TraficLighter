@@ -42,7 +42,7 @@ export class LevelsState extends GameState {
 
 	exit() {
 		if (window.DEBUG) {
-			return LEVELS[11];
+			return LEVELS[0];
 			
 		} else {
 			const v = prompt(`Level? [1 to ${LEVELS.length-1}]`);
@@ -95,6 +95,17 @@ const LEVELS: MapConstructor[] = [
 				count: Infinity,
 				score: 20
 			},
+
+			{
+				x: 7,
+				y: 12,
+				color: CarColor.YELLOW,
+				rythm: 90,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 20
+			}
 
 			
 		],

@@ -1,6 +1,7 @@
 import { MapConstructor } from "./MapConstructor"
 import { CarColor } from "./CarColor"
 import { GAME_COLORS } from "../handler/GAME_COLORS";
+import { turnSideSelector } from "./TurnSideSelector";
 
 
 
@@ -67,8 +68,12 @@ export function produceStatsPanel(map: MapConstructor) {
     });
 
 
+	const container = document.createElement("div");
+	container.appendChild(turnSideSelector.getHtmlDiv())
+	container.appendChild(table);
+	
     panel.appendChild(button);
-    panel.appendChild(table);
+	panel.appendChild(container);
 
     return panel;
 }

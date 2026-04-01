@@ -8,7 +8,7 @@ import { CAR_LINE, CAR_SIZE } from "./CAR_SIZE";
 import { modulo } from "./modulo";
 import { getDanger } from "./getDanger";
 import { ImageLoader } from "../handler/ImageLoader";
-import { COLOR_TURNS } from "./COLOR_TURNS";
+import { turnSideSelector } from "./TurnSideSelector";
 
 
 const RENDER_DISTANCE = 32;
@@ -163,16 +163,16 @@ export class Car {
 					break;
 
 				default:
-					switch (COLOR_TURNS[type - 2][this.color]) {
-					case 0:
+					switch (turnSideSelector.getConfig(type - 2)[this.color]) {
+					case 0: // front
 						break;
 
-					case 1:
+					case -1: // left
 						this.rotatingToRight = false;
 						this.rotationStep = 0;
 						break;
 
-					case 2:
+					case 1:
 						this.rotatingToRight = true;
 						this.rotationStep = 0;
 						break;

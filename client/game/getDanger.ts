@@ -2,11 +2,11 @@ import { Car } from "./Car";
 import { CAR_LINE, CAR_SIZE } from "./CAR_SIZE";
 import { Chunk } from "./Chunk";
 import { ChunkMap } from "./ChunkMap";
-import { COLOR_TURNS } from "./COLOR_TURNS";
 import { Direction, getCellDist, getDirectionDelta, opposeDirection, rotateDirectionToLeft, rotateDirectionToRight } from "./Direction";
 import { GridExplorer } from "./GridExplorer";
 import { modulo } from "./modulo";
 import { roadtypes } from "./roadtypes";
+import { turnSideSelector } from "./TurnSideSelector";
 
 
 
@@ -176,15 +176,15 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 				break;
 
 			default:
-				switch (COLOR_TURNS[type - 2][car.color]) {
+				switch (turnSideSelector.getConfig(type - 2)[car.color]) {
 				case 0:
 					break;
 
-				case 1:
+				case -1:
 					dir.turnLeft();
 					break;
 
-				case 2:
+				case 1:
 					dir.turnRight();
 					break;
 				}
@@ -423,7 +423,7 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 					{
 						let leftFlag = forbiddenCarsFlag;
 						let rightFlag = forbiddenCarsFlag;
-						const arr = COLOR_TURNS[type - 2];
+						const arr = turnSideSelector.getConfig(type - 2);
 
 						for (let i = 0; i < 8; i++) {
 							const flag = 1<<i;
@@ -433,12 +433,12 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 								rightFlag |= flag;
 								break;
 
-							case 1: // left
+							case -1: // left
 								forbiddenCarsFlag |= flag;
 								rightFlag |= flag;
 								break;
 
-							case 2: // right
+							case 1: // right
 								forbiddenCarsFlag |= flag;
 								leftFlag |= flag;
 								break;
