@@ -240,40 +240,27 @@ export class Car {
 
 
 		// Update speed limit
+		let acc = 0;
 		if ((road & 0x7) === roadtypes.types.VOID) {
 			alive = 'killed';
 		} else {
 			const speed = getDanger(this, RENDER_DISTANCE, game.chunkMap);
-			if (speed.lim < speedTarget) {
-				speedTarget = speed.lim;
-			}
-
-			if ((speed.fast > speedTarget || speed.acceleration > this.acceleration)
-				&& speed.slow < speedTarget
-			) {
-				speedTarget = speed.slow;
-			}
-
-			if (speedTarget < 0)
-				speedTarget = 0;
-
+			speedTarget = speed.lim;
+			acc = speed.acceleration;
 		}
 
 
 		// Adapt speed to speedTarget
 		let speed = this.speed;
-		if (speed < speedTarget) {
-			speed += this.acceleration;
-			if (speed > speedTarget) {
-				speed = speedTarget;
-			}
-			
-		} else if (speed > speedTarget) {
+
+		
+		speed += acc;
+		if (speed > speedTarget) {
 			speed = speedTarget;
 		}
 
 		this.nextSpeed = speed;
-		this.nextSpeedTarget = speedTarget;
+		this.nextSpeedTarget = speedTarget;		
 
 
 		if (alive === 'alive' && roadToReturn !== null) {

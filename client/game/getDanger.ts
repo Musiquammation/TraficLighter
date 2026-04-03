@@ -39,6 +39,17 @@ function getCarsDist(dir: Direction, over: Car) {
 const SIZE_LIM = (3 - CAR_SIZE - CAR_LINE) / 2;
 
 
+interface PriorityChecker {
+	exitDist: number;
+	entryDist: number;
+
+	over_speed: number;
+	over_currentSpeedTarget: number;
+	over_currentAcceleration: number;
+	over_exitDist: number;
+	over_entryDist: number;
+}
+
 class DirHelper {
 	realMove: number;
 	dir: Direction;
@@ -106,7 +117,8 @@ class DirHelper {
 	
 
 export function getDanger(car: Car, range: number, cmap: ChunkMap) {
-	let finalSpeed = Infinity;
+	const priorities: PriorityChecker[] = [];
+	let finalSpeed = car.speedLimit;
 	const CAR_PASSAGE_LENGTH = 1 + CAR_SIZE;
 	const invSpeed = 1 / car.speed;
 
@@ -131,9 +143,6 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 	const dir = new DirHelper(car);
 	const pos = new GridExplorer(car.x, car.y, cmap);
 
-	let fastPrioritySpeed = 0;
-	let fastPriorityAcceleration = Infinity;
-	let slowPrioritySpeed = Infinity;
 
 
 
@@ -496,20 +505,15 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 					}
 				}
 
-				const fastSpeed = exitDist * over.speed / over_entryDist;
 
-				if (fastSpeed > fastPrioritySpeed) {
-					fastPrioritySpeed = fastSpeed;
-					fastPriorityAcceleration = .5 * (fastSpeed*fastSpeed -
-						car.speed*car.speed) / exitDist;
-				}
+				priorities.push({
+					entryDist, exitDist,
 
-
-				const slowSpeed = entryDist * over.speed / over_exitDist;
-
-
-				if (slowSpeed < slowPrioritySpeed)
-					slowPrioritySpeed = slowSpeed;
+					over_speed: over.speed,
+					over_currentSpeedTarget: over.currentSpeedTarget,
+					over_currentAcceleration: over.currentAcceleration,
+					over_entryDist, over_exitDist
+				})
 
 				break;
 			}
@@ -517,8 +521,6 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 
 
 
-		if ((window as any).fastView && car.id === 0)
-			console.log(pos.x, pos.y);
 
 		if (checkRight) {
 			runCheck(checkDir.rdir, new GridExplorer(pos), 1, 0);
@@ -532,19 +534,55 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 	}
 
 
-	if (car.color == CarColor.RED)
-		console.log({
-			lim: finalSpeed,
-			fast: fastPrioritySpeed,
-			acceleration: fastPriorityAcceleration,
-			slow: slowPrioritySpeed
-		});
+	
+	// Check priorities
+	priorities.sort((a, b) => a.entryDist - b.entryDist);
+
+	let acceleration;
+	if (priorities.length > 0) {
+		const p = priorities[0];
+		const fastAcc = getAcceleration(
+			car.speed,
+			p.over_speed,
+			p.over_currentAcceleration,
+			finalSpeed,
+			p.over_currentSpeedTarget,
+			p.exitDist,
+			p.over_entryDist
+		);
+
+
+		if (fastAcc === null) {
+			acceleration = car.acceleration;
+
+		} else if (fastAcc > car.acceleration) {
+			const slowAcc = getAcceleration(
+				car.speed,
+				p.over_speed,
+				p.over_currentAcceleration,
+				finalSpeed,
+				p.over_currentSpeedTarget,
+				p.entryDist,
+				p.over_exitDist
+			);
+
+
+			if (slowAcc === null) {
+				acceleration = car.acceleration;
+			} else {
+				acceleration = Math.min(slowAcc, car.acceleration);
+			}
+	
+		} else {
+			acceleration = fastAcc;
+		}
+	} else {
+		acceleration = car.acceleration;
+	}
 
 	return {
 		lim: finalSpeed,
-		fast: fastPrioritySpeed,
-		acceleration: fastPriorityAcceleration,
-		slow: slowPrioritySpeed
+		acceleration
 	};
 }
 
@@ -558,8 +596,8 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
  * given initial velocities, acceleration in y, and max velocities in x and y.
  * Handles all cases for y acceleration (positive, zero, negative) and saturation.
  *
- * @param x0 - initial velocity in x
- * @param y0 - initial velocity in y
+ * @param vx0 - initial velocity in x
+ * @param vy0 - initial velocity in y
  * @param a_y - acceleration in y
  * @param vx_max - maximum velocity in x
  * @param vy_max - maximum velocity in y
@@ -567,19 +605,20 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
  * @param Y - target position in y
  * @returns maximum allowed a_x
  */
-function getAcceleration(x0: number, y0: number, a_y: number, vx_max: number, vy_max: number, X: number, Y: number): number {
+function getAcceleration(vx0: number, vy0: number, a_y: number, vx_max: number, vy_max: number, X: number, Y: number) {
 	// Helper: compute y(t) saturation parameters
 	let t_star: number; // time when y reaches vy_max or zero
 	let Vysat: number;  // saturated y velocity
 
+	
 	if (a_y > 0) {
 		Vysat = vy_max;
-		t_star = (vy_max - y0) / a_y;
+		t_star = (vy_max - vy0) / a_y;
 	} else if (a_y < 0) {
 		Vysat = 0;
-		t_star = -y0 / a_y;
+		t_star = -vy0 / a_y;
 	} else { // a_y == 0
-		Vysat = y0;
+		Vysat = vy0;
 		t_star = Infinity;
 	}
 
@@ -588,44 +627,51 @@ function getAcceleration(x0: number, y0: number, a_y: number, vx_max: number, vy
 
 	if (a_y > 0) {
 		// Quadratic solution before saturation
-		const discriminant = y0*y0 + 2*a_y*Y;
-		const T_before = (-y0 + Math.sqrt(discriminant)) / a_y;
+		const discriminant = vy0*vy0 + 2*a_y*Y;
+		const T_before = (-vy0 + Math.sqrt(discriminant)) / a_y;
 		if (T_before <= t_star) {
 			T = T_before;
 		} else {
 			// After saturation
-			T = t_star + (Y - (y0*t_star + 0.5*a_y*t_star*t_star)) / Vysat;
+			T = t_star + (Y - (vy0*t_star + 0.5*a_y*t_star*t_star)) / Vysat;
 		}
 	} else if (a_y === 0) {
-		if (y0 <= 0) throw new Error("Impossible to reach Y with a_y = 0 and y0 <= 0");
-		T = Y / y0;
+		if (vy0 <= 0) return null;
+		T = Y / vy0;
 	} else { // a_y < 0
-		const discriminant = y0*y0 - 2*a_y*Y; // note a_y < 0
-		const T_before = (-y0 - Math.sqrt(discriminant)) / a_y; // positive solution
+		const discriminant = vy0*vy0 - 2*a_y*Y; // note a_y < 0
+		const T_before = (-vy0 - Math.sqrt(discriminant)) / a_y; // positive solution
 		if (T_before <= t_star) {
 			T = T_before;
 		} else {
 			// after velocity zero: y(t) constant
-			const y_max = y0*t_star + 0.5*a_y*t_star*t_star;
-			if (Y > y_max) throw new Error("Impossible to reach Y after y velocity saturates to 0");
+			const y_max = vy0*t_star + 0.5*a_y*t_star*t_star;
+			if (Y > y_max) return null;
 			T = t_star; // any T >= t_star would work, choose T = t_star
 		}
 	}
 
-	// Compute maximum a_x without exceeding X, considering possible x velocity saturation
-	// First, check if acceleration is needed to reach vx_max
-	const t_x_star = vx_max > x0 ? (vx_max - x0) / vx_max : Infinity;
+
+	
 
 	// Compute candidate a_x without x saturation
-	const a_x_no_sat = 2 * (X - x0*T) / (T*T);
+	const a_x_no_sat = 2 * (X - vx0*T) / (T*T);
 
-	// Compute candidate a_x with x saturation
-	let a_x_with_sat = Infinity;
-	if (vx_max < Infinity && X < vx_max*T) {
-		// formula: a_x <= (vx_max - x0)^2 / (2 * (vx_max * T - X))
-		a_x_with_sat = ((vx_max - x0)*(vx_max - x0)) / (2 * (vx_max*T - X));
+
+
+	if (a_x_no_sat > 0) {
+		// Compute candidate a_x with x saturation
+		if (vx0 + a_x_no_sat*T > vx_max) {
+			return ((vx_max - vx0)*(vx_max - vx0)) / (2 * (vx_max*T - X));
+		}
+	
+	} else if (a_x_no_sat) {
+		if (vx0 + a_x_no_sat*T < 0) {
+			
+		}
 	}
 
+
 	// Return the most restrictive acceleration
-	return Math.min(a_x_no_sat, a_x_with_sat);
+	return a_x_no_sat;
 }

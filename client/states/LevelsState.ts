@@ -100,7 +100,7 @@ const LEVELS: MapConstructor[] = [
 				x: 16,
 				y: 8,
 				color: CarColor.YELLOW,
-				rythm: 30,
+				rythm: 90,
 				couldown: 1,
 				direction: Direction.DOWN,
 				count: Infinity,
