@@ -86,8 +86,8 @@ const LEVELS: MapConstructor[] = [
 		height: 31,
 		spawners: [
 			{
-				x: 6,
-				y: 12,
+				x: 13,
+				y: 22,
 				color: CarColor.RED,
 				rythm: 90,
 				couldown: 1,
@@ -97,12 +97,23 @@ const LEVELS: MapConstructor[] = [
 			},
 
 			{
-				x: 7,
-				y: 12,
+				x: 16,
+				y: 8,
 				color: CarColor.YELLOW,
+				rythm: 30,
+				couldown: 1,
+				direction: Direction.DOWN,
+				count: Infinity,
+				score: 20
+			},
+
+			{
+				x: 20,
+				y: 15,
+				color: CarColor.GREEN,
 				rythm: 90,
 				couldown: 1,
-				direction: Direction.UP,
+				direction: Direction.LEFT,
 				count: Infinity,
 				score: 20
 			}
@@ -111,11 +122,12 @@ const LEVELS: MapConstructor[] = [
 		],
 
 		roads: [
-			c(6, 1, CarColor.RED),
-			c(5, 12, CarColor.BLUE),
+			c(13, 10, CarColor.RED),
 			c(1, 7, CarColor.YELLOW),
-			c(12, 8, CarColor.GREEN),
-
+			c(10, 15, CarColor.GREEN),
+			...rect(13,10,1,12,1),
+			...rect(16,9,1,8,1),
+			...rect(10,15,10,1,1)
 		]
 	}),
 

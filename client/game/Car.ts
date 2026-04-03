@@ -21,9 +21,12 @@ export class Car {
 	direction: Direction;
 	acceleration = .003;
 	deceleration = .008;
+	currentAcceleration = 0;
+	currentSpeedTarget = 0;
 	speedLimit = .2;
 	speed = this.speedLimit;
 	nextSpeed = this.speedLimit;
+	nextSpeedTarget = this.speedLimit;
 	rotationStep = -1;
 	rotatingToRight = false;
 	color: CarColor;
@@ -251,14 +254,8 @@ export class Car {
 				speedTarget = speed.slow;
 			}
 
-
-			if (this.id === 0 && (window as any).stopFirst) {
-				speedTarget = 0;
-			}
-
 			if (speedTarget < 0)
 				speedTarget = 0;
-
 
 		}
 
@@ -276,6 +273,7 @@ export class Car {
 		}
 
 		this.nextSpeed = speed;
+		this.nextSpeedTarget = speedTarget;
 
 
 		if (alive === 'alive' && roadToReturn !== null) {
@@ -286,6 +284,8 @@ export class Car {
 	}
 	
 	move() {
+		this.currentAcceleration = this.nextSpeed - this.speed;
+		this.currentSpeedTarget = this.nextSpeedTarget;
 		this.speed = this.nextSpeed;
 
 		if (this.rotationStep < 0) {

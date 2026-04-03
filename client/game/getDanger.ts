@@ -1,5 +1,6 @@
 import { Car } from "./Car";
 import { CAR_LINE, CAR_SIZE } from "./CAR_SIZE";
+import { CarColor } from "./CarColor";
 import { Chunk } from "./Chunk";
 import { ChunkMap } from "./ChunkMap";
 import { Direction, getCellDist, getDirectionDelta, opposeDirection, rotateDirectionToLeft, rotateDirectionToRight } from "./Direction";
@@ -531,6 +532,13 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 	}
 
 
+	if (car.color == CarColor.RED)
+		console.log({
+			lim: finalSpeed,
+			fast: fastPrioritySpeed,
+			acceleration: fastPriorityAcceleration,
+			slow: slowPrioritySpeed
+		});
 
 	return {
 		lim: finalSpeed,
@@ -538,4 +546,86 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 		acceleration: fastPriorityAcceleration,
 		slow: slowPrioritySpeed
 	};
+}
+
+
+
+
+
+
+/**
+ * Compute the maximum allowed acceleration a_x such that x(T) <= X
+ * given initial velocities, acceleration in y, and max velocities in x and y.
+ * Handles all cases for y acceleration (positive, zero, negative) and saturation.
+ *
+ * @param x0 - initial velocity in x
+ * @param y0 - initial velocity in y
+ * @param a_y - acceleration in y
+ * @param vx_max - maximum velocity in x
+ * @param vy_max - maximum velocity in y
+ * @param X - maximum allowed position in x
+ * @param Y - target position in y
+ * @returns maximum allowed a_x
+ */
+function getAcceleration(x0: number, y0: number, a_y: number, vx_max: number, vy_max: number, X: number, Y: number): number {
+	// Helper: compute y(t) saturation parameters
+	let t_star: number; // time when y reaches vy_max or zero
+	let Vysat: number;  // saturated y velocity
+
+	if (a_y > 0) {
+		Vysat = vy_max;
+		t_star = (vy_max - y0) / a_y;
+	} else if (a_y < 0) {
+		Vysat = 0;
+		t_star = -y0 / a_y;
+	} else { // a_y == 0
+		Vysat = y0;
+		t_star = Infinity;
+	}
+
+	// Compute T such that y(T) = Y
+	let T: number;
+
+	if (a_y > 0) {
+		// Quadratic solution before saturation
+		const discriminant = y0*y0 + 2*a_y*Y;
+		const T_before = (-y0 + Math.sqrt(discriminant)) / a_y;
+		if (T_before <= t_star) {
+			T = T_before;
+		} else {
+			// After saturation
+			T = t_star + (Y - (y0*t_star + 0.5*a_y*t_star*t_star)) / Vysat;
+		}
+	} else if (a_y === 0) {
+		if (y0 <= 0) throw new Error("Impossible to reach Y with a_y = 0 and y0 <= 0");
+		T = Y / y0;
+	} else { // a_y < 0
+		const discriminant = y0*y0 - 2*a_y*Y; // note a_y < 0
+		const T_before = (-y0 - Math.sqrt(discriminant)) / a_y; // positive solution
+		if (T_before <= t_star) {
+			T = T_before;
+		} else {
+			// after velocity zero: y(t) constant
+			const y_max = y0*t_star + 0.5*a_y*t_star*t_star;
+			if (Y > y_max) throw new Error("Impossible to reach Y after y velocity saturates to 0");
+			T = t_star; // any T >= t_star would work, choose T = t_star
+		}
+	}
+
+	// Compute maximum a_x without exceeding X, considering possible x velocity saturation
+	// First, check if acceleration is needed to reach vx_max
+	const t_x_star = vx_max > x0 ? (vx_max - x0) / vx_max : Infinity;
+
+	// Compute candidate a_x without x saturation
+	const a_x_no_sat = 2 * (X - x0*T) / (T*T);
+
+	// Compute candidate a_x with x saturation
+	let a_x_with_sat = Infinity;
+	if (vx_max < Infinity && X < vx_max*T) {
+		// formula: a_x <= (vx_max - x0)^2 / (2 * (vx_max * T - X))
+		a_x_with_sat = ((vx_max - x0)*(vx_max - x0)) / (2 * (vx_max*T - X));
+	}
+
+	// Return the most restrictive acceleration
+	return Math.min(a_x_no_sat, a_x_with_sat);
 }
