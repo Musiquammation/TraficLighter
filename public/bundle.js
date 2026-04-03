@@ -772,14 +772,6 @@ var roadtypes;
 })(roadtypes || (roadtypes = {}));
 const CAR_SIZE = 0.9;
 const CAR_LINE = 0.6;
-const COLOR_TURNS = [
-  [0, 0, 1, 1, 2, 2, 0, 0],
-  [0, 1, 0, 2, 1, 2, 0, 0],
-  [1, 1, 2, 2, 0, 0, 0, 0],
-  [1, 2, 1, 0, 2, 0, 0, 0],
-  [2, 2, 0, 0, 1, 1, 0, 0],
-  [2, 0, 2, 1, 0, 1, 0, 0]
-];
 class GridExplorer {
   constructor(a, b2, cmap) {
     if (a instanceof GridExplorer) {
@@ -833,6 +825,158 @@ class GridExplorer {
     return this.chunk.setRoad(this.x, this.y, road);
   }
 }
+const GAME_COLORS = [
+  "#ac3232",
+  "#fbf236",
+  "#5b6ee1",
+  "#6abe30",
+  "#5fcde4",
+  "#d77bba",
+  "#f0f8ed",
+  "#6e6e6e"
+];
+const COLOR_NAMES = ["red", "yellow", "blue", "green", "cyan", "pink", "white", "black"];
+const DIRECTION_CYCLE = [0, 1, -1];
+const DIRECTION_LABELS = { 0: "Front", 1: "Right", "-1": "Left" };
+class TurnSideSelector {
+  constructor(div) {
+    this.activationDiv = div;
+    this.activeConfigIndex = 0;
+    this.buttons = [];
+    this.configs = Array.from(
+      { length: 6 },
+      () => Array(8).fill(0)
+    );
+    const { panel, backdrop } = this.buildPanel();
+    this.panel = panel;
+    this.backdrop = backdrop;
+    document.body.appendChild(backdrop);
+    document.body.appendChild(panel);
+  }
+  show() {
+    this.backdrop.classList.add("turn-selector-visible");
+    this.panel.classList.add("turn-selector-visible");
+  }
+  hide() {
+    this.backdrop.classList.remove("turn-selector-visible");
+    this.panel.classList.remove("turn-selector-visible");
+  }
+  getHtmlDiv() {
+    return this.activationDiv;
+  }
+  getConfig(idx) {
+    return this.configs[idx];
+  }
+  // Build the full panel and backdrop, wire up all interactivity
+  buildPanel() {
+    const backdrop = document.createElement("div");
+    backdrop.classList.add("turn-selector-backdrop");
+    backdrop.addEventListener("click", () => this.hide());
+    const panel = document.createElement("div");
+    panel.classList.add("turn-selector-panel");
+    panel.addEventListener("click", (e) => e.stopPropagation());
+    const title = document.createElement("div");
+    title.classList.add("turn-selector-title");
+    title.textContent = "Turn Selector";
+    panel.appendChild(title);
+    const selectorRow = document.createElement("div");
+    selectorRow.classList.add("turn-selector-row");
+    const selectorLabel = document.createElement("label");
+    selectorLabel.textContent = "Config:";
+    selectorLabel.classList.add("turn-selector-label");
+    const select = document.createElement("select");
+    select.classList.add("turn-selector-select");
+    for (let i = 1; i <= 6; i++) {
+      const option = document.createElement("option");
+      option.value = String(i - 1);
+      option.textContent = String(i);
+      select.appendChild(option);
+    }
+    select.addEventListener("change", () => {
+      this.activeConfigIndex = parseInt(select.value);
+      this.refreshButtons();
+    });
+    selectorRow.appendChild(selectorLabel);
+    selectorRow.appendChild(select);
+    panel.appendChild(selectorRow);
+    const table = document.createElement("table");
+    table.classList.add("turn-selector-table");
+    this.buttons = [];
+    for (let i = 0; i < 8; i++) {
+      const row = document.createElement("tr");
+      const colorCell = document.createElement("th");
+      colorCell.classList.add("turn-selector-color-cell");
+      colorCell.style.backgroundColor = GAME_COLORS[i];
+      colorCell.style.color = this.isDark(GAME_COLORS[i]) ? "#fff" : "#111";
+      colorCell.textContent = COLOR_NAMES[i].toUpperCase();
+      row.appendChild(colorCell);
+      const btnCell = document.createElement("td");
+      btnCell.classList.add("turn-selector-btn-cell");
+      const btn = document.createElement("button");
+      btn.classList.add("turn-selector-dir-btn");
+      btn.textContent = DIRECTION_LABELS[0];
+      btn.dataset.colorIndex = String(i);
+      btn.addEventListener("click", () => {
+        const colorIdx = parseInt(btn.dataset.colorIndex);
+        const current = this.configs[this.activeConfigIndex][colorIdx];
+        const cycleIdx = DIRECTION_CYCLE.indexOf(current);
+        const next = DIRECTION_CYCLE[(cycleIdx + 1) % DIRECTION_CYCLE.length];
+        this.configs[this.activeConfigIndex][colorIdx] = next;
+        btn.textContent = DIRECTION_LABELS[next];
+        btn.dataset.direction = String(next);
+        this.updateButtonStyle(btn, next);
+      });
+      this.buttons.push([btn]);
+      btnCell.appendChild(btn);
+      row.appendChild(btnCell);
+      table.appendChild(row);
+    }
+    panel.appendChild(table);
+    const doneBtn = document.createElement("button");
+    doneBtn.classList.add("turn-selector-done-btn");
+    doneBtn.textContent = "Done";
+    doneBtn.addEventListener("click", () => this.hide());
+    panel.appendChild(doneBtn);
+    return { panel, backdrop };
+  }
+  // Refresh all button labels when the active config changes
+  refreshButtons() {
+    const config = this.configs[this.activeConfigIndex];
+    for (let i = 0; i < 8; i++) {
+      const btn = this.buttons[i][0];
+      const dir = config[i];
+      btn.textContent = DIRECTION_LABELS[dir];
+      btn.dataset.direction = String(dir);
+      this.updateButtonStyle(btn, dir);
+    }
+  }
+  // Apply a CSS class to visually distinguish directions
+  updateButtonStyle(btn, dir) {
+    btn.classList.remove("dir-front", "dir-right", "dir-left");
+    if (dir === 0) btn.classList.add("dir-front");
+    if (dir === 1) btn.classList.add("dir-right");
+    if (dir === -1) btn.classList.add("dir-left");
+  }
+  // Determine if a hex color is perceptually dark
+  isDark(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b2 = parseInt(hex.slice(5, 7), 16);
+    return 0.299 * r + 0.587 * g + 0.114 * b2 < 140;
+  }
+}
+function generateSideSelectorDivOpener() {
+  const main = document.createElement("div");
+  main.classList.add("turn-selector-opener");
+  main.textContent = "Turn Selector";
+  return main;
+}
+const opener = generateSideSelectorDivOpener();
+const turnSideSelector = new TurnSideSelector(opener);
+opener.addEventListener("click", () => {
+  turnSideSelector.show();
+});
+console.log(turnSideSelector);
 function getCarsDist(dir, over) {
   if (over.rotationStep < 0) ;
   switch (dir) {
@@ -943,13 +1087,13 @@ function getDanger(car, range, cmap) {
             dir.turnLeft();
             break;
           default:
-            switch (COLOR_TURNS[type - 2][car.color]) {
+            switch (turnSideSelector.getConfig(type - 2)[car.color]) {
               case 0:
                 break;
-              case 1:
+              case -1:
                 dir.turnLeft();
                 break;
-              case 2:
+              case 1:
                 dir.turnRight();
                 break;
             }
@@ -1120,18 +1264,18 @@ function getDanger(car, range, cmap) {
                 break;
               default: {
                 let rightFlag = forbiddenCarsFlag;
-                const arr = COLOR_TURNS[type - 2];
+                const arr = turnSideSelector.getConfig(type - 2);
                 for (let i = 0; i < 8; i++) {
                   const flag = 1 << i;
                   switch (arr[i]) {
                     case 0:
                       rightFlag |= flag;
                       break;
-                    case 1:
+                    case -1:
                       forbiddenCarsFlag |= flag;
                       rightFlag |= flag;
                       break;
-                    case 2:
+                    case 1:
                       forbiddenCarsFlag |= flag;
                       break;
                   }
@@ -1194,6 +1338,13 @@ function getDanger(car, range, cmap) {
     }
     pos.move(dir.d, cmap);
   }
+  if (car.color == CarColor.RED)
+    console.log({
+      lim: finalSpeed,
+      fast: fastPrioritySpeed,
+      acceleration: fastPriorityAcceleration,
+      slow: slowPrioritySpeed
+    });
   return {
     lim: finalSpeed,
     fast: fastPrioritySpeed,
@@ -1207,9 +1358,12 @@ class Car {
   constructor(x, y, spawnerId, direction, color, score) {
     this.acceleration = 3e-3;
     this.deceleration = 8e-3;
+    this.currentAcceleration = 0;
+    this.currentSpeedTarget = 0;
     this.speedLimit = 0.2;
     this.speed = this.speedLimit;
     this.nextSpeed = this.speedLimit;
+    this.nextSpeedTarget = this.speedLimit;
     this.rotationStep = -1;
     this.rotatingToRight = false;
     this.frameLastPositionUpdate = -1;
@@ -1304,14 +1458,14 @@ class Car {
               this.rotationStep = 0;
               break;
             default:
-              switch (COLOR_TURNS[type - 2][this.color]) {
+              switch (turnSideSelector.getConfig(type - 2)[this.color]) {
                 case 0:
                   break;
-                case 1:
+                case -1:
                   this.rotatingToRight = false;
                   this.rotationStep = 0;
                   break;
-                case 2:
+                case 1:
                   this.rotatingToRight = true;
                   this.rotationStep = 0;
                   break;
@@ -1367,9 +1521,6 @@ class Car {
       if ((speed2.fast > speedTarget || speed2.acceleration > this.acceleration) && speed2.slow < speedTarget) {
         speedTarget = speed2.slow;
       }
-      if (this.id === 0 && window.stopFirst) {
-        speedTarget = 0;
-      }
       if (speedTarget < 0)
         speedTarget = 0;
     }
@@ -1383,12 +1534,15 @@ class Car {
       speed = speedTarget;
     }
     this.nextSpeed = speed;
+    this.nextSpeedTarget = speedTarget;
     if (alive === "alive" && roadToReturn !== null) {
       return roadToReturn;
     }
     return alive;
   }
   move() {
+    this.currentAcceleration = this.nextSpeed - this.speed;
+    this.currentSpeedTarget = this.nextSpeedTarget;
     this.speed = this.nextSpeed;
     if (this.rotationStep < 0) {
       switch (this.direction) {
@@ -2004,8 +2158,11 @@ function produceStatsPanel(map) {
   button.addEventListener("click", () => {
     panel.classList.toggle("shown");
   });
+  const container = document.createElement("div");
+  container.appendChild(turnSideSelector.getHtmlDiv());
+  container.appendChild(table);
   panel.appendChild(button);
-  panel.appendChild(table);
+  panel.appendChild(container);
   return panel;
 }
 const timeLeftDiv = document.getElementById("timeLeft");
@@ -2553,7 +2710,7 @@ class LevelsState extends GameState {
   }
   exit() {
     if (window.DEBUG) {
-      return LEVELS[11];
+      return LEVELS[0];
     } else {
       const v = prompt(`Level? [1 to ${LEVELS.length - 1}]`);
       if (v !== null)
@@ -2586,21 +2743,43 @@ const LEVELS = [
     height: 31,
     spawners: [
       {
-        x: 6,
-        y: 12,
+        x: 13,
+        y: 22,
         color: CarColor.RED,
         rythm: 90,
         couldown: 1,
         direction: Direction.UP,
         count: Infinity,
         score: 20
+      },
+      {
+        x: 16,
+        y: 8,
+        color: CarColor.YELLOW,
+        rythm: 30,
+        couldown: 1,
+        direction: Direction.DOWN,
+        count: Infinity,
+        score: 20
+      },
+      {
+        x: 20,
+        y: 15,
+        color: CarColor.GREEN,
+        rythm: 90,
+        couldown: 1,
+        direction: Direction.LEFT,
+        count: Infinity,
+        score: 20
       }
     ],
     roads: [
-      c(6, 1, CarColor.RED),
-      c(5, 12, CarColor.BLUE),
+      c(13, 10, CarColor.RED),
       c(1, 7, CarColor.YELLOW),
-      c(12, 8, CarColor.GREEN)
+      c(10, 15, CarColor.GREEN),
+      ...rect(13, 10, 1, 12, 1),
+      ...rect(16, 9, 1, 8, 1),
+      ...rect(10, 15, 10, 1, 1)
     ]
   }),
   // Level 1
@@ -3546,16 +3725,6 @@ const LEVELS = [
       c(8, 14, CarColor.YELLOW)
     ]
   })
-];
-const GAME_COLORS = [
-  "#ac3232",
-  "#fbf236",
-  "#5b6ee1",
-  "#6abe30",
-  "#5fcde4",
-  "#d77bba",
-  "#f0f8ed",
-  "#6e6e6e"
 ];
 function setElementAsBackground(element, div) {
   if (element instanceof HTMLCanvasElement) {
