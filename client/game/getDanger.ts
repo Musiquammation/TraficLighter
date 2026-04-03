@@ -551,6 +551,8 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 			p.over_entryDist
 		);
 
+		console.log(fastAcc);
+
 
 		if (fastAcc === null) {
 			acceleration = car.acceleration;
@@ -662,12 +664,12 @@ function getAcceleration(vx0: number, vy0: number, a_y: number, vx_max: number, 
 	if (a_x_no_sat > 0) {
 		// Compute candidate a_x with x saturation
 		if (vx0 + a_x_no_sat*T > vx_max) {
-			return ((vx_max - vx0)*(vx_max - vx0)) / (2 * (vx_max*T - X));
+			return .5 * vx_max*vx_max - vx0*vx0 / X;
 		}
 	
-	} else if (a_x_no_sat) {
+	} else if (a_x_no_sat < 0) {
 		if (vx0 + a_x_no_sat*T < 0) {
-			
+			return -.5 * vx0*vx0 / X;
 		}
 	}
 
