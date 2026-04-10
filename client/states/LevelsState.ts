@@ -1138,11 +1138,278 @@ const LEVELS: MapConstructor[] = [
 		width: 31,
 		height: 31,
 		spawners: [
+			{
+				x: 16,
+				y: 30,
+				color: CarColor.RED,
+				rythm: 50,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
 
+			{
+				x: 15,
+				y: 1,
+				color: CarColor.BLUE,
+				rythm: 50,
+				couldown: 1,
+				direction: Direction.DOWN,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 1,
+				y: 16,
+				color: CarColor.YELLOW,
+				rythm: 50,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 30,
+				y: 15,
+				color: CarColor.GREEN,
+				rythm: 60,
+				couldown: 1,
+				direction: Direction.LEFT,
+				count: Infinity,
+				score: 1
+			},
 		],
 
-		roads: []
+		roads: [
+			c(16, 14, CarColor.RED),
+			c(15, 17, CarColor.BLUE),
+			c(14, 15, CarColor.GREEN),
+			c(17, 16, CarColor.YELLOW),
+		]
+	}),
 
+	// Level 13
+	new MapConstructor({
+		time: 100*60,
+		width: 31,
+		height: 31,
+		spawners: [
+			{
+				x: 16,
+				y: 30,
+				color: CarColor.RED,
+				rythm: 60,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 15,
+				y: 1,
+				color: CarColor.BLUE,
+				rythm: 60,
+				couldown: 1,
+				direction: Direction.DOWN,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 1,
+				y: 16,
+				color: CarColor.YELLOW,
+				rythm: 60,
+				couldown: 1,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 30,
+				y: 15,
+				color: CarColor.GREEN,
+				rythm: 60,
+				couldown: 1,
+				direction: Direction.LEFT,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 28,
+				y: 28,
+				color: CarColor.PINK,
+				rythm: 120,
+				couldown: 1,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 13
+
+			}
+		],
+
+		roads: [
+			c(16, 14, CarColor.RED),
+			c(15, 17, CarColor.BLUE),
+			c(14, 15, CarColor.GREEN),
+			c(17, 16, CarColor.YELLOW),
+			c(2, 2, CarColor.PINK)
+		]
+	}),
+
+	// Level 14
+	new MapConstructor({
+		time: 100*60,
+		width: 31,
+		height: 31,
+		spawners: [
+			{
+				x: 13,
+				y: 30,
+				color: CarColor.RED,
+				rythm: 90,
+				couldown: 10,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 14,
+				y: 30,
+				color: CarColor.YELLOW,
+				rythm: 90,
+				couldown: 20,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 15,
+				y: 30,
+				color: CarColor.BLUE,
+				rythm: 90,
+				couldown: 30,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 16,
+				y: 30,
+				color: CarColor.GREEN,
+				rythm: 90,
+				couldown: 40,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 17,
+				y: 30,
+				color: CarColor.CYAN,
+				rythm: 90,
+				couldown: 50,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 18,
+				y: 30,
+				color: CarColor.PINK,
+				rythm: 90,
+				couldown: 60,
+				direction: Direction.UP,
+				count: Infinity,
+				score: 1
+			},
+		],
+
+		roads: [
+			c(13, 1, CarColor.PINK),
+			c(14, 1, CarColor.CYAN),
+			c(15, 1, CarColor.GREEN),
+			c(16, 1, CarColor.BLUE),
+			c(17, 1, CarColor.YELLOW),
+			c(18, 1, CarColor.RED),
+
+			...rect(13, 1, 6, 30, 1)
+		]
+	}),
+
+	
+	// Level 15
+	new MapConstructor({
+		time: 100*60,
+		width: 31,
+		height: 31,
+		spawners: [
+			{
+				x: 1,
+				y: 1,
+				color: CarColor.RED,
+				rythm: 30,
+				couldown: 10,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 1,
+				y: 2,
+				color: CarColor.PINK,
+				rythm: 180,
+				couldown: 10,
+				direction: Direction.RIGHT,
+				count: Infinity,
+				score: 30
+			},
+
+			{
+				x: 30,
+				y: 1,
+				color: CarColor.GREEN,
+				rythm: 30,
+				couldown: 10,
+				direction: Direction.LEFT,
+				count: Infinity,
+				score: 1
+			},
+
+			{
+				x: 30,
+				y: 2,
+				color: CarColor.CYAN,
+				rythm: 180,
+				couldown: 10,
+				direction: Direction.LEFT,
+				count: Infinity,
+				score: 30
+			},
+		],
+
+		roads: [
+			c(6, 5, CarColor.CYAN),
+			c(25, 5, CarColor.PINK),
+			c(16, 30, CarColor.GREEN),
+			c(15, 30, CarColor.RED),
+
+			...rect(12, 8, 1, 24),
+			...rect(15, 0, 2, 24),
+			...rect(19, 8, 1, 24),
+		]
 	})
 
 

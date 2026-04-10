@@ -362,9 +362,6 @@ export function getDanger(car: Car, range: number, cmap: ChunkMap) {
 			const opDir = opposeDirection(dir);
 
 			for (; checkDist < range; checkDist++) {
-				if ((window as any).fastView && car.id === 0 && (forbiddenCarsFlag & (1<<5)) === 0)
-					console.log(">",explorer.x, explorer.y, forbiddenCarsFlag);
-
 				explorer.move(turnDir, cmap);
 				const road = explorer.getRoad();
 
