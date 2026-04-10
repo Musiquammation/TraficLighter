@@ -1129,6 +1129,20 @@ const LEVELS: MapConstructor[] = [
 			c(23, 14, CarColor.RED),
 			c(8, 14, CarColor.YELLOW),
 		]
+	}),
+
+
+	// Level 12
+	new MapConstructor({
+		time: 100*60,
+		width: 31,
+		height: 31,
+		spawners: [
+
+		],
+
+		roads: []
+
 	})
 
 
