@@ -1219,8 +1219,6 @@ function getDanger(car, range, cmap) {
       const rightDir = rotateDirectionToRight(dir2);
       const opDir = opposeDirection(dir2);
       for (; checkDist < range; checkDist++) {
-        if (window.fastView && car.id === 0 && (forbiddenCarsFlag & 1 << 5) === 0)
-          console.log(">", explorer.x, explorer.y, forbiddenCarsFlag);
         explorer.move(turnDir, cmap);
         const road2 = explorer.getRoad();
         const checkToLeft = (flags) => {
@@ -1338,13 +1336,6 @@ function getDanger(car, range, cmap) {
     }
     pos.move(dir.d, cmap);
   }
-  if (car.color == CarColor.RED)
-    console.log({
-      lim: finalSpeed,
-      fast: fastPrioritySpeed,
-      acceleration: fastPriorityAcceleration,
-      slow: slowPrioritySpeed
-    });
   return {
     lim: finalSpeed,
     fast: fastPrioritySpeed,
@@ -1358,12 +1349,9 @@ class Car {
   constructor(x, y, spawnerId, direction, color, score) {
     this.acceleration = 3e-3;
     this.deceleration = 8e-3;
-    this.currentAcceleration = 0;
-    this.currentSpeedTarget = 0;
     this.speedLimit = 0.2;
     this.speed = this.speedLimit;
     this.nextSpeed = this.speedLimit;
-    this.nextSpeedTarget = this.speedLimit;
     this.rotationStep = -1;
     this.rotatingToRight = false;
     this.frameLastPositionUpdate = -1;
@@ -1521,6 +1509,9 @@ class Car {
       if ((speed2.fast > speedTarget || speed2.acceleration > this.acceleration) && speed2.slow < speedTarget) {
         speedTarget = speed2.slow;
       }
+      if (this.id === 0 && window.stopFirst) {
+        speedTarget = 0;
+      }
       if (speedTarget < 0)
         speedTarget = 0;
     }
@@ -1534,15 +1525,12 @@ class Car {
       speed = speedTarget;
     }
     this.nextSpeed = speed;
-    this.nextSpeedTarget = speedTarget;
     if (alive === "alive" && roadToReturn !== null) {
       return roadToReturn;
     }
     return alive;
   }
   move() {
-    this.currentAcceleration = this.nextSpeed - this.speed;
-    this.currentSpeedTarget = this.nextSpeedTarget;
     this.speed = this.nextSpeed;
     if (this.rotationStep < 0) {
       switch (this.direction) {
@@ -2710,7 +2698,7 @@ class LevelsState extends GameState {
   }
   exit() {
     if (window.DEBUG) {
-      return LEVELS[0];
+      return LEVELS[15];
     } else {
       const v = prompt(`Level? [1 to ${LEVELS.length - 1}]`);
       if (v !== null)
@@ -2746,7 +2734,7 @@ const LEVELS = [
         x: 13,
         y: 22,
         color: CarColor.RED,
-        rythm: 90,
+        rythm: 45,
         couldown: 1,
         direction: Direction.UP,
         count: Infinity,
@@ -2756,7 +2744,7 @@ const LEVELS = [
         x: 16,
         y: 8,
         color: CarColor.YELLOW,
-        rythm: 30,
+        rythm: 45,
         couldown: 1,
         direction: Direction.DOWN,
         count: Infinity,
@@ -2766,7 +2754,7 @@ const LEVELS = [
         x: 20,
         y: 15,
         color: CarColor.GREEN,
-        rythm: 90,
+        rythm: 45,
         couldown: 1,
         direction: Direction.LEFT,
         count: Infinity,
@@ -3723,6 +3711,259 @@ const LEVELS = [
       ...rect(15, 16, 2, 15),
       c(23, 14, CarColor.RED),
       c(8, 14, CarColor.YELLOW)
+    ]
+  }),
+  // Level 12
+  new MapConstructor({
+    time: 100 * 60,
+    width: 31,
+    height: 31,
+    spawners: [
+      {
+        x: 16,
+        y: 30,
+        color: CarColor.RED,
+        rythm: 50,
+        couldown: 1,
+        direction: Direction.UP,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 15,
+        y: 1,
+        color: CarColor.BLUE,
+        rythm: 50,
+        couldown: 1,
+        direction: Direction.DOWN,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 1,
+        y: 16,
+        color: CarColor.YELLOW,
+        rythm: 50,
+        couldown: 1,
+        direction: Direction.RIGHT,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 30,
+        y: 15,
+        color: CarColor.GREEN,
+        rythm: 60,
+        couldown: 1,
+        direction: Direction.LEFT,
+        count: Infinity,
+        score: 1
+      }
+    ],
+    roads: [
+      c(16, 14, CarColor.RED),
+      c(15, 17, CarColor.BLUE),
+      c(14, 15, CarColor.GREEN),
+      c(17, 16, CarColor.YELLOW)
+    ]
+  }),
+  // Level 13
+  new MapConstructor({
+    time: 100 * 60,
+    width: 31,
+    height: 31,
+    spawners: [
+      {
+        x: 16,
+        y: 30,
+        color: CarColor.RED,
+        rythm: 60,
+        couldown: 1,
+        direction: Direction.UP,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 15,
+        y: 1,
+        color: CarColor.BLUE,
+        rythm: 60,
+        couldown: 1,
+        direction: Direction.DOWN,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 1,
+        y: 16,
+        color: CarColor.YELLOW,
+        rythm: 60,
+        couldown: 1,
+        direction: Direction.RIGHT,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 30,
+        y: 15,
+        color: CarColor.GREEN,
+        rythm: 60,
+        couldown: 1,
+        direction: Direction.LEFT,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 28,
+        y: 28,
+        color: CarColor.PINK,
+        rythm: 120,
+        couldown: 1,
+        direction: Direction.UP,
+        count: Infinity,
+        score: 13
+      }
+    ],
+    roads: [
+      c(16, 14, CarColor.RED),
+      c(15, 17, CarColor.BLUE),
+      c(14, 15, CarColor.GREEN),
+      c(17, 16, CarColor.YELLOW),
+      c(2, 2, CarColor.PINK)
+    ]
+  }),
+  // Level 14
+  new MapConstructor({
+    time: 100 * 60,
+    width: 31,
+    height: 31,
+    spawners: [
+      {
+        x: 13,
+        y: 30,
+        color: CarColor.RED,
+        rythm: 90,
+        couldown: 10,
+        direction: Direction.UP,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 14,
+        y: 30,
+        color: CarColor.YELLOW,
+        rythm: 90,
+        couldown: 20,
+        direction: Direction.UP,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 15,
+        y: 30,
+        color: CarColor.BLUE,
+        rythm: 90,
+        couldown: 30,
+        direction: Direction.UP,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 16,
+        y: 30,
+        color: CarColor.GREEN,
+        rythm: 90,
+        couldown: 40,
+        direction: Direction.UP,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 17,
+        y: 30,
+        color: CarColor.CYAN,
+        rythm: 90,
+        couldown: 50,
+        direction: Direction.UP,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 18,
+        y: 30,
+        color: CarColor.PINK,
+        rythm: 90,
+        couldown: 60,
+        direction: Direction.UP,
+        count: Infinity,
+        score: 1
+      }
+    ],
+    roads: [
+      c(13, 1, CarColor.PINK),
+      c(14, 1, CarColor.CYAN),
+      c(15, 1, CarColor.GREEN),
+      c(16, 1, CarColor.BLUE),
+      c(17, 1, CarColor.YELLOW),
+      c(18, 1, CarColor.RED),
+      ...rect(13, 1, 6, 30, 1)
+    ]
+  }),
+  // Level 15
+  new MapConstructor({
+    time: 100 * 60,
+    width: 31,
+    height: 31,
+    spawners: [
+      {
+        x: 1,
+        y: 1,
+        color: CarColor.RED,
+        rythm: 30,
+        couldown: 10,
+        direction: Direction.RIGHT,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 1,
+        y: 2,
+        color: CarColor.PINK,
+        rythm: 180,
+        couldown: 10,
+        direction: Direction.RIGHT,
+        count: Infinity,
+        score: 30
+      },
+      {
+        x: 30,
+        y: 1,
+        color: CarColor.GREEN,
+        rythm: 30,
+        couldown: 10,
+        direction: Direction.LEFT,
+        count: Infinity,
+        score: 1
+      },
+      {
+        x: 30,
+        y: 2,
+        color: CarColor.CYAN,
+        rythm: 180,
+        couldown: 10,
+        direction: Direction.LEFT,
+        count: Infinity,
+        score: 30
+      }
+    ],
+    roads: [
+      c(6, 5, CarColor.CYAN),
+      c(25, 5, CarColor.PINK),
+      c(16, 30, CarColor.GREEN),
+      c(15, 30, CarColor.RED),
+      ...rect(12, 8, 1, 24),
+      ...rect(15, 0, 2, 24),
+      ...rect(19, 8, 1, 24)
     ]
   })
 ];
