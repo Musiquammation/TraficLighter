@@ -42,7 +42,7 @@ export class LevelsState extends GameState {
 
 	exit() {
 		if (window.DEBUG) {
-			return LEVELS[0];
+			return LEVELS[0	];
 			
 		} else {
 			const v = prompt(`Level? [1 to ${LEVELS.length-1}]`);
